@@ -1,7 +1,15 @@
+mod statblock;
+mod deserialize;
+use crate::deserialize::deserialize;
+
+use std::env::current_dir;
+
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
 fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
+    println!("{:?}", current_dir().unwrap().as_path());
+    let monster = deserialize("../data/packs/pathfinder-monster-core/kobold-warrior.json");
+    format!("Hello, {}! You've been greeted from Rust! {:?}", name, monster)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
