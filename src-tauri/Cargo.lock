@@ -1757,11 +1757,13 @@ dependencies = [
 name = "initiative-tracker"
 version = "0.1.0"
 dependencies = [
+ "lazy_static",
  "serde",
  "serde_json",
  "tauri",
  "tauri-build",
  "tauri-plugin-opener",
+ "walkdir",
 ]
 
 [[package]]
