@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::{deserialize::walk_bestiary, statblock::Monster};
 
 pub struct Bestiary {
-    pub monsters: HashMap<String, Monster>
+    pub monsters: HashMap<String, Monster>,
 }
 
 impl Bestiary {

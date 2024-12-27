@@ -19,7 +19,7 @@ pub fn walk_bestiary(base_path: &str) -> HashMap<String, Monster> {
             entries.insert(creature.name.clone(), creature);
         }
     }
-    
+
     entries
 }
 
@@ -43,7 +43,7 @@ pub fn deserialize(path: &Path) -> Option<Monster> {
 }
 
 fn deserialize_saves(saves: &Value) -> Saves {
-    Saves { 
+    Saves {
         fortitude: saves["fortitude"]["value"].as_i64().unwrap(),
         reflex: saves["reflex"]["value"].as_i64().unwrap(),
         will: saves["will"]["value"].as_i64().unwrap(),

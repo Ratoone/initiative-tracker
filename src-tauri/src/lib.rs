@@ -1,16 +1,17 @@
 #[macro_use(lazy_static)]
 extern crate lazy_static;
 
-mod statblock;
+mod bestiary;
 mod commands;
 mod deserialize;
-mod bestiary;
+mod statblock;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_log::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![commands::greet])
+        .invoke_handler(tauri::generate_handler![commands::greet, commands::get_all])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
