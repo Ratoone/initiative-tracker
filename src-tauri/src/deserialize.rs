@@ -1,9 +1,51 @@
 use std::{collections::HashMap, fs, path::Path};
 
-use crate::statblock::{Monster, Defenses};
+use crate::statblock::{Defenses, Endurances, Monster};
 
 use serde_json::Value;
 use walkdir::WalkDir;
+
+trait StringValue {
+    fn string_value(&self) -> String;
+    fn get_string(&self) -> String;
+}
+
+trait I64Value {
+    fn int_value(&self) -> i64;
+}
+
+trait ArrayValue<T, F> {
+    fn array_value(&self, f: F) -> Vec<T>
+    where
+        F: FnMut(&Value) -> T;
+}
+
+impl StringValue for Value {
+    fn string_value(&self) -> String {
+        self["value"].get_string()
+    }
+
+    fn get_string(&self) -> String {
+        self.as_str().unwrap_or("").to_string()
+    }
+}
+
+impl I64Value for Value {
+    fn int_value(&self) -> i64 {
+        self["value"].as_i64().unwrap_or_default()
+    }
+}
+
+impl<T, F> ArrayValue<T, F> for Value {
+    fn array_value(&self, f: F) -> Vec<T>
+    where
+        F: FnMut(&Value) -> T,
+    {
+        self.as_array()
+            .map(|list| list.iter().map(f).collect())
+            .unwrap_or(vec![])
+    }
+}
 
 pub fn walk_bestiary(base_path: &str) -> HashMap<String, Monster> {
     let mut entries: HashMap<String, Monster> = HashMap::new();
@@ -37,16 +79,53 @@ pub fn deserialize(path: &Path) -> Option<Monster> {
         name: parsed["name"].as_str().unwrap().to_string(),
         defenses: deserialize_saves(saves, attributes),
         hp: attributes["hp"]["max"].as_i64().unwrap(),
-        lvl: system["details"]["level"]["value"].as_i64().unwrap(),
+        hp_detail: attributes["hp"]["details"].get_string(),
+        lvl: system["details"]["level"].int_value(),
+        endurances: deserialize_endurances(attributes),
     })
 }
 
 fn deserialize_saves(saves: &Value, attributes: &Value) -> Defenses {
     Defenses {
-        ac: attributes["ac"]["value"].as_i64().unwrap(),
-        fortitude: saves["fortitude"]["value"].as_i64().unwrap(),
-        reflex: saves["reflex"]["value"].as_i64().unwrap(),
-        will: saves["will"]["value"].as_i64().unwrap(),
-        all_saves: attributes["allSaves"]["value"].as_str().unwrap_or("").to_string()
+        ac: attributes["ac"].int_value(),
+        fortitude: saves["fortitude"].int_value(),
+        reflex: saves["reflex"].int_value(),
+        will: saves["will"].int_value(),
+        all_saves: attributes["allSaves"].string_value(),
+    }
+}
+
+fn deserialize_endurances(attributes: &Value) -> Endurances {
+    Endurances {
+        immunities: attributes["immunities"].array_value(|el| el["type"].get_string()),
+        resistances: attributes["resistances"].array_value(|el| {
+            let mut string = format!("{} {}", el["type"].get_string(), el.int_value());
+            if let Some(exceptions) = el["exceptions"].as_array() {
+                if !exceptions.is_empty() {
+                    string = format!(
+                        "{} (except {})",
+                        string,
+                        el["exceptions"]
+                            .array_value(StringValue::get_string)
+                            .join(", ")
+                    );
+                }
+            }
+
+            if let Some(exceptions) = el["doubleVs"].as_array() {
+                if !exceptions.is_empty() {
+                    string = format!(
+                        "{} (double vs. {})",
+                        string,
+                        el["doubleVs"]
+                            .array_value(StringValue::get_string)
+                            .join(", ")
+                    );
+                }
+            }
+            string
+        }),
+        weaknesses: attributes["weaknesses"]
+            .array_value(|el| format!("{} {}", el["type"].get_string(), el.int_value())),
     }
 }

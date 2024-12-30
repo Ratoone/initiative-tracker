@@ -26,7 +26,16 @@ function onTableRowClick(item) {
     console.log(item);
     document.getElementById("statblock-name").innerHTML = `<b>${item.name}</b>`;
     document.getElementById("statblock-level").innerText = item.lvl;
-    document.getElementById("statblock-defenses").innerHTML = `<b>AC</b> ${item.defenses.ac}; <b>Fort</b> ${item.defenses.fortitude}; <b>Reflex</b> ${item.defenses.reflex}; <b>Will</b> ${item.defenses.will}; ${item.defenses.all_saves}`;
+    document.getElementById("statblock-defenses").innerHTML = `${listValue("AC", item.defenses.ac)} ${listValue("Fort", item.defenses.fortitude)} ${listValue("Reflex", item.defenses.reflex)} ${listValue("Will", item.defenses.will)} ${item.defenses.all_saves}`;
+    document.getElementById("statblock-health").innerHTML = `${listValue("HP", item.hp)} ${item.hp_detail ? item.hp_detail + ";" : ""} ${listArray("Immunities", item.endurances.immunities)} ${listArray("Resistances", item.endurances.resistances)} ${listArray("Weaknesses", item.endurances.weaknesses)}`;
+}
+
+function listValue(name, value) {
+    return !value ? "" : `<b>${name}</b> ${value};`
+}
+
+function listArray(name, array) {
+    return array.length === 0 ? "" : `<b>${name}</b> ${array.join(", ")};`
 }
 
 window.addEventListener("DOMContentLoaded", () => {

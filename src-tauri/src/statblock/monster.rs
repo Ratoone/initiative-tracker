@@ -5,7 +5,9 @@ pub struct Monster {
     pub name: String,
     pub defenses: Defenses,
     pub hp: i64,
+    pub hp_detail: String,
     pub lvl: i64,
+    pub endurances: Endurances,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -15,4 +17,11 @@ pub struct Defenses {
     pub reflex: i64,
     pub will: i64,
     pub all_saves: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct Endurances {
+    pub immunities: Vec<String>,
+    pub resistances: Vec<String>,
+    pub weaknesses: Vec<String>,
 }
