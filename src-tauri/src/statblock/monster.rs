@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize)]
@@ -9,11 +11,13 @@ pub struct Monster {
     pub lvl: i64,
     pub endurances: Endurances,
     pub traits: Traits,
+    pub skills: HashMap<String, i64>,
 }
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Defenses {
     pub ac: i64,
+    pub ac_detail: String,
     pub fortitude: i64,
     pub reflex: i64,
     pub will: i64,

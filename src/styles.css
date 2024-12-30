@@ -81,20 +81,19 @@
     background-color: #800080;
 }
 
-.logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: 0.75s;
+.add-button {
+    border: 2px solid #2d4059;
+    border-radius: 4px;
+    padding: 0.3em;
+    cursor: pointer;
 }
 
-.logo.tauri:hover {
-    filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
-    display: flex;
-    justify-content: center;
+.level {
+    text-align: center;
+    width: 1.3em;
+    height: 1.1em;
+    padding: 0.2em;
+    vertical-align: middle;
 }
 
 a {
@@ -141,10 +140,6 @@ button:active {
 input,
 button {
     outline: none;
-}
-
-#greet-input {
-    margin-right: 5px;
 }
 
 @media (prefers-color-scheme: dark) {

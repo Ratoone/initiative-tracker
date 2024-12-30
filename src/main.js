@@ -4,12 +4,18 @@ function loadTableData(items) {
     const table = document.getElementById("monster-list-body");
     items.forEach(item => {
         let row = table.insertRow();
-        let nameCell = row.insertCell(0);
+        let addButton = row.insertCell();
+        addButton.innerHTML = "Add";
+        addButton.classList.add("add-button");
+
+        let nameCell = row.insertCell();
         nameCell.innerHTML = item.name;
-        let lvlCell = row.insertCell(1);
+        nameCell.onclick = () => onTableRowClick(item);
+        
+        let lvlCell = row.insertCell();
         lvlCell.innerHTML = item.lvl;
         lvlCell.classList.add(`${item.traits.rarity}-trait`)
-        row.onclick = () => onTableRowClick(item);
+        lvlCell.classList.add("level")
     });
 }
 
@@ -17,12 +23,19 @@ function onTableRowClick(item) {
     console.log(item);
     document.getElementById("statblock-name").innerHTML = `<b>${item.name}</b>`;
     document.getElementById("statblock-level").innerText = item.lvl;
-    document.getElementById("statblock-level").classList = [`${item.traits.rarity}-trait`]
+    document.getElementById("statblock-level").classList = `${item.traits.rarity}-trait level`
     
     createTraitBar(item.traits);
+    document.getElementById("statblock-skills").innerHTML = `<b>Skills</b> ${formatSkills(item.skills)}`
     
-    document.getElementById("statblock-defenses").innerHTML = `${listValue("AC", item.defenses.ac)} ${listValue("Fort", item.defenses.fortitude)} ${listValue("Reflex", item.defenses.reflex)} ${listValue("Will", item.defenses.will)} ${item.defenses.all_saves}`;
+    document.getElementById("statblock-defenses").innerHTML = `${listValue("AC", item.defenses.ac)} ${listValue("", item.defenses.ac_detail)} ${listValue("Fort", item.defenses.fortitude)} ${listValue("Reflex", item.defenses.reflex)} ${listValue("Will", item.defenses.will)} ${item.defenses.all_saves}`;
     document.getElementById("statblock-health").innerHTML = `${listValue("HP", item.hp)} ${item.hp_detail ? item.hp_detail + ";" : ""} ${listArray("Immunities", item.endurances.immunities)} ${listArray("Resistances", item.endurances.resistances)} ${listArray("Weaknesses", item.endurances.weaknesses)}`;
+}
+
+function formatSkills(skills) {
+    return Object.entries(skills).reduce((str, [p, val]) => {
+        return `${str} ${p} +${val}, `;
+    }, "").slice(0, -2);
 }
 
 function createTraitBar(traits) {

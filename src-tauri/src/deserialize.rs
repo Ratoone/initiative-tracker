@@ -12,6 +12,7 @@ trait StringValue {
 
 trait I64Value {
     fn int_value(&self) -> i64;
+    fn get_int(&self) -> i64;
 }
 
 trait ArrayValue<T, F> {
@@ -32,7 +33,11 @@ impl StringValue for Value {
 
 impl I64Value for Value {
     fn int_value(&self) -> i64 {
-        self["value"].as_i64().unwrap_or_default()
+        self["value"].get_int()
+    }
+
+    fn get_int(&self) -> i64 {
+        self.as_i64().unwrap_or_default()
     }
 }
 
@@ -75,19 +80,34 @@ pub fn deserialize(path: &Path) -> Option<Monster> {
     let attributes = &system["attributes"];
 
     Some(Monster {
-        name: parsed["name"].as_str().unwrap().to_string(),
-        defenses: deserialize_saves(&system["saves"], attributes),
+        name: parsed["name"].get_string(),
+        defenses: map_saves(&system["saves"], attributes),
         hp: attributes["hp"]["max"].as_i64().unwrap(),
         hp_detail: attributes["hp"]["details"].get_string(),
         lvl: system["details"]["level"].int_value(),
-        endurances: deserialize_endurances(attributes),
-        traits: deserialize_traits(&system["traits"])
+        endurances: map_endurances(attributes),
+        traits: map_traits(&system["traits"]),
+        skills: map_skills(&system["skills"]),
     })
 }
 
-fn deserialize_saves(saves: &Value, attributes: &Value) -> Defenses {
+fn map_skills(skills: &Value) -> HashMap<String, i64> {
+    let mut mapped_skills: HashMap<String, i64> = HashMap::new();
+    if skills.is_null() {
+        return mapped_skills;
+    }
+
+    let map = skills.as_object().unwrap();
+    map.iter().for_each(|(key, value)| {
+        mapped_skills.insert(key.clone(), value["base"].get_int());
+    });
+    mapped_skills
+}
+
+fn map_saves(saves: &Value, attributes: &Value) -> Defenses {
     Defenses {
         ac: attributes["ac"].int_value(),
+        ac_detail: attributes["ac"]["details"].get_string(),
         fortitude: saves["fortitude"].int_value(),
         reflex: saves["reflex"].int_value(),
         will: saves["will"].int_value(),
@@ -95,7 +115,7 @@ fn deserialize_saves(saves: &Value, attributes: &Value) -> Defenses {
     }
 }
 
-fn deserialize_endurances(attributes: &Value) -> Endurances {
+fn map_endurances(attributes: &Value) -> Endurances {
     Endurances {
         immunities: attributes["immunities"].array_value(|el| el["type"].get_string()),
         resistances: attributes["resistances"].array_value(|el| {
@@ -130,7 +150,7 @@ fn deserialize_endurances(attributes: &Value) -> Endurances {
     }
 }
 
-fn deserialize_traits(traits: &Value) -> Traits {
+fn map_traits(traits: &Value) -> Traits {
     Traits {
         size: map_size(&traits["size"].string_value()).to_string(),
         rarity: traits["rarity"].get_string(),
@@ -144,6 +164,7 @@ fn map_size(size: &String) -> &str {
         "sm" => "small",
         "med" => "medium",
         "lg" => "large",
+        "huge" => "huge",
         "grg" => "gargantuan",
         _ => ""
     }
