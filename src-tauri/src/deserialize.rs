@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fs, path::Path};
 
-use crate::statblock::{Defenses, Endurances, Monster};
+use crate::statblock::{Defenses, Endurances, Monster, Traits};
 
 use serde_json::Value;
 use walkdir::WalkDir;
@@ -73,15 +73,15 @@ pub fn deserialize(path: &Path) -> Option<Monster> {
     }
     let system = &parsed["system"];
     let attributes = &system["attributes"];
-    let saves = &system["saves"];
 
     Some(Monster {
         name: parsed["name"].as_str().unwrap().to_string(),
-        defenses: deserialize_saves(saves, attributes),
+        defenses: deserialize_saves(&system["saves"], attributes),
         hp: attributes["hp"]["max"].as_i64().unwrap(),
         hp_detail: attributes["hp"]["details"].get_string(),
         lvl: system["details"]["level"].int_value(),
         endurances: deserialize_endurances(attributes),
+        traits: deserialize_traits(&system["traits"])
     })
 }
 
@@ -127,5 +127,24 @@ fn deserialize_endurances(attributes: &Value) -> Endurances {
         }),
         weaknesses: attributes["weaknesses"]
             .array_value(|el| format!("{} {}", el["type"].get_string(), el.int_value())),
+    }
+}
+
+fn deserialize_traits(traits: &Value) -> Traits {
+    Traits {
+        size: map_size(&traits["size"].string_value()).to_string(),
+        rarity: traits["rarity"].get_string(),
+        rest: traits["value"].array_value(StringValue::get_string)
+    }
+}
+
+fn map_size(size: &String) -> &str {
+    match size.as_str() {
+        "tiny" => "tiny",
+        "sm" => "small",
+        "med" => "medium",
+        "lg" => "large",
+        "grg" => "gargantuan",
+        _ => ""
     }
 }

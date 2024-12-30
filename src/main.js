@@ -1,15 +1,5 @@
 const { invoke } = window.__TAURI__.core;
 
-let greetInputEl;
-let greetMsgEl;
-let monsters;
-
-async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    greetMsgEl.textContent = JSON.stringify(await invoke("greet", { name: greetInputEl.value }));
-    console.log(greetMsgEl.textContent);
-}
-
 function loadTableData(items) {
     const table = document.getElementById("monster-list-body");
     items.forEach(item => {
@@ -18,6 +8,7 @@ function loadTableData(items) {
         nameCell.innerHTML = item.name;
         let lvlCell = row.insertCell(1);
         lvlCell.innerHTML = item.lvl;
+        lvlCell.classList.add(`${item.traits.rarity}-trait`)
         row.onclick = () => onTableRowClick(item);
     });
 }
@@ -26,8 +17,33 @@ function onTableRowClick(item) {
     console.log(item);
     document.getElementById("statblock-name").innerHTML = `<b>${item.name}</b>`;
     document.getElementById("statblock-level").innerText = item.lvl;
+    document.getElementById("statblock-level").classList = [`${item.traits.rarity}-trait`]
+    
+    createTraitBar(item.traits);
+    
     document.getElementById("statblock-defenses").innerHTML = `${listValue("AC", item.defenses.ac)} ${listValue("Fort", item.defenses.fortitude)} ${listValue("Reflex", item.defenses.reflex)} ${listValue("Will", item.defenses.will)} ${item.defenses.all_saves}`;
     document.getElementById("statblock-health").innerHTML = `${listValue("HP", item.hp)} ${item.hp_detail ? item.hp_detail + ";" : ""} ${listArray("Immunities", item.endurances.immunities)} ${listArray("Resistances", item.endurances.resistances)} ${listArray("Weaknesses", item.endurances.weaknesses)}`;
+}
+
+function createTraitBar(traits) {
+    const container = document.getElementById("statblock-traits");
+    container.innerText = "";
+    if (traits.rarity != "common") {
+        createTraitChip(traits.rarity, `${traits.rarity}-trait`);
+    }
+    createTraitChip(traits.size, "size-trait");
+    traits.rest.forEach(element => {
+        createTraitChip(element)
+    });
+}
+
+function createTraitChip(name, extraClass) {
+    const container = document.getElementById("statblock-traits");
+    const chip = document.createElement("div");
+    chip.classList.add("trait-chip");
+    chip.classList.add(extraClass)
+    chip.textContent = name;
+    container.appendChild(chip);
 }
 
 function listValue(name, value) {
@@ -37,15 +53,6 @@ function listValue(name, value) {
 function listArray(name, array) {
     return array.length === 0 ? "" : `<b>${name}</b> ${array.join(", ")};`
 }
-
-window.addEventListener("DOMContentLoaded", () => {
-    greetInputEl = document.querySelector("#greet-input");
-    greetMsgEl = document.querySelector("#greet-msg");
-    document.querySelector("#greet-form").addEventListener("submit", (e) => {
-        e.preventDefault();
-        greet();
-    });
-});
 
 invoke("get_all").then(data => {
     console.log(data);

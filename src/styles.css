@@ -50,6 +50,37 @@
     justify-content: space-between;
 }
 
+#statblock-traits {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.trait-chip {
+    background-color: #531004;
+    border-color: #d5c489;
+    border-style: double;
+    border-width: 2px;
+    margin: 0.1em 0;
+    padding: 0 5px;
+}
+
+.size-trait {
+    background-color: #478c42;
+}
+
+.uncommon-trait {
+    background-color: #c45500;
+}
+
+.rare-trait {
+    background-color: #0c1466;
+}
+
+.unique-trait {
+    background-color: #800080;
+}
+
 .logo {
     height: 6em;
     padding: 1.5em;

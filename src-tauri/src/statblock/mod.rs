@@ -1,3 +1,3 @@
 mod monster;
 
-pub use monster::{Monster, Defenses, Endurances};
+pub use monster::{Monster, Defenses, Endurances, Traits};
