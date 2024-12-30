@@ -1,4 +1,4 @@
 mod monster;
 
 pub use monster::Monster;
-pub use monster::Saves;
+pub use monster::Defenses;

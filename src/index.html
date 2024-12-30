@@ -1,48 +1,61 @@
 <!doctype html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <link rel="stylesheet" href="styles.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tauri App</title>
     <script type="module" src="/main.js" defer></script>
-  </head>
+</head>
 
-  <body>
+<body>
     <main class="container">
-      <h1>Welcome to Tauri</h1>
+        <h1>Welcome to Tauri</h1>
 
-      <div class="row">
-        <a href="https://tauri.app" target="_blank">
-          <img src="/assets/tauri.svg" class="logo tauri" alt="Tauri logo" />
-        </a>
-        <a
-          href="https://developer.mozilla.org/en-US/docs/Web/JavaScript"
-          target="_blank"
-        >
-          <img
-            src="/assets/javascript.svg"
-            class="logo vanilla"
-            alt="JavaScript logo"
-          />
-        </a>
-      </div>
-      <p>Click on the Tauri logo to learn more about the framework</p>
+        <div class="main-layout">
+            <div class="browse">
+                <table id="monster-list">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Level</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monster-list-body"></tbody>
+                </table>
+            </div>
 
-      <form class="row" id="greet-form">
-        <input id="greet-input" placeholder="Enter a name..." />
-        <button type="submit">Greet</button>
-      </form>
-      <p id="greet-msg"></p>
-      <table id="monsterList">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Level</th>
-          </tr>
-        </thead>
-        <tbody id="monsterListBody"></tbody>
-      </table>
+            <div class="encounter"><p>Test2</p></div>
+
+            <div id="statblock">
+                <div id="statblock-title">
+                    <div id="statblock-name"></div>
+                    <div id="statblock-level"></div>
+                </div>
+
+                <div id="statblock-defenses"></div>
+                <hr/>
+                <div id="statblock-abilities"></div>
+            </div>
+        </div>
+
+        <div class="row">
+            <a href="https://tauri.app" target="_blank">
+                <img src="/assets/tauri.svg" class="logo tauri" alt="Tauri logo" />
+            </a>
+            <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank">
+                <img src="/assets/javascript.svg" class="logo vanilla" alt="JavaScript logo" />
+            </a>
+        </div>
+        <p>Click on the Tauri logo to learn more about the framework</p>
+
+        <form class="row" id="greet-form">
+            <input id="greet-input" placeholder="Enter a name..." />
+            <button type="submit">Greet</button>
+        </form>
+        <p id="greet-msg"></p>
     </main>
-  </body>
+</body>
+
 </html>

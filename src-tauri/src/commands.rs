@@ -19,5 +19,7 @@ pub fn greet(name: &str) -> Result<Monster, String> {
 #[tauri::command(async)]
 pub fn get_all() -> Vec<Monster> {
     let cache = CACHE.lock().unwrap();
-    cache.monsters.values().cloned().collect()
+    let mut monsters: Vec<Monster> = cache.monsters.values().cloned().collect();
+    monsters.sort_by(|m1, m2| m1.name.cmp(&m2.name));
+    monsters
 }
