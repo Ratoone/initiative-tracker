@@ -26,8 +26,9 @@ function onTableRowClick(item) {
     document.getElementById("statblock-level").classList = `${item.traits.rarity}-trait level`
     
     createTraitBar(item.traits);
-    document.getElementById("statblock-senses").innerHTML = `${listValue("Perception", item.senses.perception)} ${listValue("", item.senses.details)} ${listArray("", item.senses.rest)}`
-    document.getElementById("statblock-skills").innerHTML = `<b>Skills</b> ${formatSkills(item.skills)}`
+    document.getElementById("statblock-senses").innerHTML = `${listValue("Perception", item.senses.perception)} ${listValue("", item.senses.details)} ${listArray("", item.senses.rest)}`;
+    document.getElementById("statblock-languages").innerHTML = `${listArray("Languages", item.languages)} ${item.language_detail}`;
+    document.getElementById("statblock-skills").innerHTML = `<b>Skills</b> ${formatSkills(item.skills)}`;
     
     document.getElementById("statblock-defenses").innerHTML = `${listValue("AC", item.defenses.ac)} ${listValue("", item.defenses.ac_detail)} ${listValue("Fort", item.defenses.fortitude)} ${listValue("Reflex", item.defenses.reflex)} ${listValue("Will", item.defenses.will)} ${item.defenses.all_saves}`;
     document.getElementById("statblock-health").innerHTML = `${listValue("HP", item.hp)} ${item.hp_detail ? item.hp_detail + ";" : ""} ${listArray("Immunities", item.endurances.immunities)} ${listArray("Resistances", item.endurances.resistances)} ${listArray("Weaknesses", item.endurances.weaknesses)}`;

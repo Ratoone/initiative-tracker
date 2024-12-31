@@ -89,6 +89,8 @@ pub fn deserialize(path: &Path) -> Option<Monster> {
         traits: map_traits(&system["traits"]),
         skills: map_skills(&system["skills"]),
         senses: map_senses(&system["perception"]),
+        languages: system["details"]["languages"]["value"].array_value(StringValue::get_string),
+        language_detail: system["details"]["languages"]["details"].get_string(),
     })
 }
 

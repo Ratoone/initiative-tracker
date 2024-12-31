@@ -13,6 +13,8 @@ pub struct Monster {
     pub traits: Traits,
     pub skills: HashMap<String, i64>,
     pub senses: Senses,
+    pub languages: Vec<String>,
+    pub language_detail: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
