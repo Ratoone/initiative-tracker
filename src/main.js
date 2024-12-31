@@ -32,6 +32,8 @@ function onTableRowClick(item) {
     
     document.getElementById("statblock-defenses").innerHTML = `${listValue("AC", item.defenses.ac)} ${listValue("", item.defenses.ac_detail)} ${listValue("Fort", item.defenses.fortitude)} ${listValue("Reflex", item.defenses.reflex)} ${listValue("Will", item.defenses.will)} ${item.defenses.all_saves}`;
     document.getElementById("statblock-health").innerHTML = `${listValue("HP", item.hp)} ${item.hp_detail ? item.hp_detail + ";" : ""} ${listArray("Immunities", item.endurances.immunities)} ${listArray("Resistances", item.endurances.resistances)} ${listArray("Weaknesses", item.endurances.weaknesses)}`;
+
+    document.getElementById("statblock-speed").innerHTML = `<b>Speed</b> ${listValue("", item.speed.base)} ${listArray("", item.speed.rest)}`;
 }
 
 function formatSkills(skills) {

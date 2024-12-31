@@ -15,6 +15,7 @@ pub struct Monster {
     pub senses: Senses,
     pub languages: Vec<String>,
     pub language_detail: String,
+    pub speed: Speeds,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -45,5 +46,11 @@ pub struct Traits {
 pub struct Senses {
     pub perception: i64,
     pub details: String,
+    pub rest: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct Speeds {
+    pub base: i64,
     pub rest: Vec<String>,
 }
