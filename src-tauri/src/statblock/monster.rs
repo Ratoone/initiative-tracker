@@ -12,6 +12,7 @@ pub struct Monster {
     pub endurances: Endurances,
     pub traits: Traits,
     pub skills: HashMap<String, i64>,
+    pub senses: Senses,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -35,5 +36,12 @@ pub struct Endurances {
 pub struct Traits {
     pub rarity: String,
     pub size: String,
+    pub rest: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct Senses {
+    pub perception: i64,
+    pub details: String,
     pub rest: Vec<String>,
 }

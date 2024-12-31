@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fs, path::Path};
 
-use crate::statblock::{Defenses, Endurances, Monster, Traits};
+use crate::statblock::{Defenses, Endurances, Monster, Senses, Traits};
 
 use serde_json::Value;
 use walkdir::WalkDir;
@@ -88,7 +88,26 @@ pub fn deserialize(path: &Path) -> Option<Monster> {
         endurances: map_endurances(attributes),
         traits: map_traits(&system["traits"]),
         skills: map_skills(&system["skills"]),
+        senses: map_senses(&system["perception"]),
     })
+}
+
+fn map_senses(senses: &Value) -> Senses {
+    Senses {
+        perception: senses["mod"].get_int(),
+        details: senses["details"].get_string(),
+        rest: senses["senses"].array_value(|el| {
+            let mut sense = el["type"].get_string();
+            if !el["acuity"].is_null() {
+                sense += format!(" ({})", el["acuity"].get_string()).as_str();
+            }
+
+            if !el["range"].is_null() {
+                sense += format!(" {} feet", el["range"].get_int()).as_str();
+            }
+            sense
+        })
+    }
 }
 
 fn map_skills(skills: &Value) -> HashMap<String, i64> {
