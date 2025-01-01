@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="styles.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tauri App</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script type="module" src="/main.js" defer></script>
 </head>
 
@@ -15,6 +16,14 @@
 
         <div class="main-layout">
             <div class="browse">
+                <div id="monster-filter" class="side-by-side">
+                    <input id="filter-text" spellCheck={false} autoComplete="off" autoCorrect="off" autoCapitalize="off" />
+                    <select id="filter-by">
+                        <option>Name</option>
+                        <option>Trait</option>
+                    </select>
+
+                </div>
                 <table id="monster-list">
                     <tbody id="monster-list-body"></tbody>
                 </table>
@@ -29,7 +38,7 @@
                 </div>
                 <hr/>
 
-                <div id="statblock-traits"></div>
+                <div id="statblock-traits" class="side-by-side"></div>
                 <div id="statblock-senses"></div>
                 <div id="statblock-languages"></div>
                 <div id="statblock-skills"></div>

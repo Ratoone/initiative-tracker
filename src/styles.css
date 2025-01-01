@@ -50,7 +50,7 @@
     justify-content: space-between;
 }
 
-#statblock-traits {
+.side-by-side {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -111,7 +111,8 @@ h1 {
 }
 
 input,
-button {
+button,
+select {
     border-radius: 8px;
     border: 1px solid transparent;
     padding: 0.6em 1.2em;
@@ -138,7 +139,8 @@ button:active {
 }
 
 input,
-button {
+button,
+select {
     outline: none;
 }
 
@@ -153,7 +155,8 @@ button {
     }
 
     input,
-    button {
+    button,
+    select {
         color: #ffffff;
         background-color: #0f0f0f98;
     }

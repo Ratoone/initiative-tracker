@@ -2,6 +2,7 @@ const { invoke } = window.__TAURI__.core;
 
 function loadTableData(items) {
     const table = document.getElementById("monster-list-body");
+    table.innerHTML = "";
     items.forEach(item => {
         let row = table.insertRow();
         let addButton = row.insertCell();
@@ -74,4 +75,30 @@ function listArray(name, array) {
 invoke("get_all").then(data => {
     console.log(data);
     loadTableData(data)
-})
+});
+
+$("#filter-text").on("input", async function() {
+    const value = $(this).val();
+    let data = await getFilteredMonsterData(value, $("#filter-by").val());
+    loadTableData(data);
+});
+
+$("#filter-by").on("input", function() {
+    $("#filter-text").val("");
+    $("#filter-text").trigger("input");
+});
+
+async function getFilteredMonsterData(searchValue, searchBy) {
+    if (searchValue === "") {
+        return await invoke("get_all");
+    }
+
+    switch (searchBy) {
+        case "Name":
+            return await invoke("get_by_name", {name: searchValue});
+        case "Trait":
+            return await invoke("get_by_trait", {name: searchValue});
+        default:
+            return [];
+    }
+}

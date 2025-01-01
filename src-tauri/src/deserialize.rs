@@ -52,8 +52,8 @@ impl<T, F> ArrayValue<T, F> for Value {
     }
 }
 
-pub fn walk_bestiary(base_path: &str) -> HashMap<String, Monster> {
-    let mut entries: HashMap<String, Monster> = HashMap::new();
+pub fn walk_bestiary(base_path: &str) -> Vec<Monster> {
+    let mut entries: Vec<Monster> = vec![];
 
     for entry in WalkDir::new(base_path).into_iter().filter_map(|e| e.ok()) {
         let dir_entry = entry.path();
@@ -63,7 +63,7 @@ pub fn walk_bestiary(base_path: &str) -> HashMap<String, Monster> {
 
         let result = deserialize(dir_entry);
         if let Some(creature) = result {
-            entries.insert(creature.name.clone(), creature);
+            entries.push(creature);
         }
     }
 
