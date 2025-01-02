@@ -8,6 +8,7 @@ function loadTableData(items) {
         let addButton = row.insertCell();
         addButton.innerHTML = "Add";
         addButton.classList.add("add-button");
+        addButton.onclick = () => onAddToTrackerClick(item);
 
         let nameCell = row.insertCell();
         nameCell.innerHTML = item.name;
@@ -35,6 +36,14 @@ function onTableRowClick(item) {
     document.getElementById("statblock-health").innerHTML = `${listValue("HP", item.hp)} ${item.hp_detail ? item.hp_detail + ";" : ""} ${listArray("Immunities", item.endurances.immunities)} ${listArray("Resistances", item.endurances.resistances)} ${listArray("Weaknesses", item.endurances.weaknesses)}`;
 
     document.getElementById("statblock-speed").innerHTML = `<b>Speed</b> ${listValue("", item.speed.base)} ${listArray("", item.speed.rest)}`;
+}
+
+async function onAddToTrackerClick(item) {
+    const tracker = document.getElementById("encounter-tracker");
+    const monster = document.createElement("div");
+    monster.innerHTML = item.name;
+    tracker.appendChild(monster);
+    await invoke("add_to_tracker", {monster_name: item.name});
 }
 
 function formatSkills(skills) {
@@ -102,3 +111,7 @@ async function getFilteredMonsterData(searchValue, searchBy) {
             return [];
     }
 }
+
+$("#player-view").on("click", function() {
+    invoke("open_player_view");
+});
