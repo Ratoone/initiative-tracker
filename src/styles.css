@@ -33,11 +33,12 @@
     flex-flow: row wrap;
 }
 
-.main-layout > div {
+.main-layout>div {
     flex: 1;
     height: calc(100vh - 6em);
     overflow-y: scroll;
     text-align: justify;
+    margin: 0 5px;
 }
 
 .browse {
@@ -45,8 +46,8 @@
 }
 
 #statblock-title {
-    display:flex;
-    flex-direction:row;
+    display: flex;
+    flex-direction: row;
     justify-content: space-between;
 }
 
@@ -94,6 +95,16 @@
     height: 1.1em;
     padding: 0.2em;
     vertical-align: middle;
+}
+
+#filter-text {
+    flex: 1;
+    margin-right: 5px;
+    min-width: 0;
+}
+
+#filter-by {
+    flex: 0;
 }
 
 a {

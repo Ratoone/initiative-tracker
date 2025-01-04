@@ -69,8 +69,8 @@ pub async fn open_player_view(handle: tauri::AppHandle) {
 
 #[tauri::command]
 pub fn add_to_tracker(state: tauri::State<'_, Mutex<AppState>>, monster_name: &str) {
-  let mut app_state = state.lock().unwrap();
-  let monster: Monster = app_state.bestiary.monsters.iter().find(|&m| m.name == monster_name).unwrap().clone();
-  println!("{:?}", &monster);
-  app_state.tracker.push(monster);
+    let mut app_state = state.lock().unwrap();
+    let monster: Monster = app_state.bestiary.find_by_name(monster_name).unwrap().clone();
+    println!("{:?}", &monster);
+    app_state.tracker.push(monster);
 }

@@ -1,4 +1,10 @@
+import * as mapper from "./mapper.js";
+
 const { invoke } = window.__TAURI__.core;
+
+invoke("get_all").then(data => {
+    loadTableData(data)
+});
 
 function loadTableData(items) {
     const table = document.getElementById("monster-list-body");
@@ -12,7 +18,7 @@ function loadTableData(items) {
 
         let nameCell = row.insertCell();
         nameCell.innerHTML = item.name;
-        nameCell.onclick = () => onTableRowClick(item);
+        nameCell.onclick = () => displayStatblock(item);
         
         let lvlCell = row.insertCell();
         lvlCell.innerHTML = item.lvl;
@@ -21,35 +27,61 @@ function loadTableData(items) {
     });
 }
 
-function onTableRowClick(item) {
+function displayStatblock(item) {
     console.log(item);
     document.getElementById("statblock-name").innerHTML = `<b>${item.name}</b>`;
     document.getElementById("statblock-level").innerText = item.lvl;
     document.getElementById("statblock-level").classList = `${item.traits.rarity}-trait level`
     
     createTraitBar(item.traits);
-    document.getElementById("statblock-senses").innerHTML = `${listValue("Perception", item.senses.perception)} ${listValue("", item.senses.details)} ${listArray("", item.senses.rest)}`;
-    document.getElementById("statblock-languages").innerHTML = `${listArray("Languages", item.languages)} ${item.language_detail}`;
-    document.getElementById("statblock-skills").innerHTML = `<b>Skills</b> ${formatSkills(item.skills)}`;
+    document.getElementById("statblock-senses").innerHTML = `${mapper.listValue("Perception", item.senses.perception)} ${mapper.listValue("", item.senses.details)} ${mapper.listArray("", item.senses.rest)}`;
+    document.getElementById("statblock-languages").innerHTML = `${mapper.listArray("Languages", item.languages)} ${item.language_detail}`;
+    document.getElementById("statblock-skills").innerHTML = `<b>Skills</b> ${mapper.formatSkills(item.skills)}`;
     
-    document.getElementById("statblock-defenses").innerHTML = `${listValue("AC", item.defenses.ac)} ${listValue("", item.defenses.ac_detail)} ${listValue("Fort", item.defenses.fortitude)} ${listValue("Reflex", item.defenses.reflex)} ${listValue("Will", item.defenses.will)} ${item.defenses.all_saves}`;
-    document.getElementById("statblock-health").innerHTML = `${listValue("HP", item.hp)} ${item.hp_detail ? item.hp_detail + ";" : ""} ${listArray("Immunities", item.endurances.immunities)} ${listArray("Resistances", item.endurances.resistances)} ${listArray("Weaknesses", item.endurances.weaknesses)}`;
+    document.getElementById("statblock-defenses").innerHTML = `${mapper.listValue("AC", item.defenses.ac)} ${mapper.listValue("", item.defenses.ac_detail)} ${mapper.listValue("Fort", item.defenses.fortitude)} ${mapper.listValue("Reflex", item.defenses.reflex)} ${mapper.listValue("Will", item.defenses.will)} ${item.defenses.all_saves}`;
+    document.getElementById("statblock-health").innerHTML = `${mapper.listValue("HP", item.hp)} ${item.hp_detail ? item.hp_detail + ";" : ""} ${mapper.listArray("Immunities", item.endurances.immunities)} ${mapper.listArray("Resistances", item.endurances.resistances)} ${mapper.listArray("Weaknesses", item.endurances.weaknesses)}`;
 
-    document.getElementById("statblock-speed").innerHTML = `<b>Speed</b> ${listValue("", item.speed.base)} ${listArray("", item.speed.rest)}`;
+    document.getElementById("statblock-speed").innerHTML = `<b>Speed</b> ${mapper.listValue("", item.speed.base)} ${mapper.listArray("", item.speed.rest)}`;
 }
 
 async function onAddToTrackerClick(item) {
     const tracker = document.getElementById("encounter-tracker");
-    const monster = document.createElement("div");
-    monster.innerHTML = item.name;
-    tracker.appendChild(monster);
-    await invoke("add_to_tracker", {monster_name: item.name});
+    tracker.appendChild(createTrackerParticipant(item));
+    await invoke("add_to_tracker", {monsterName: item.name});
 }
 
-function formatSkills(skills) {
-    return Object.entries(skills).reduce((str, [p, val]) => {
-        return `${str} ${p} +${val}, `;
-    }, "").slice(0, -2);
+function createTrackerParticipant(item) {
+    const monster = document.createElement("div");
+    monster.classList = "tracker-participant side-by-side"
+    monster.innerHTML = `
+        <div>Initiative</div>
+        <div class="participant-general">
+            <div class="side-by-side">
+                <div class="level">${item.lvl}</div>
+                <div>${item.name}</div>
+            </div>
+            <progress value="${item.hp}" max="${item.hp}"></progress>
+            <div class="side-by-side">
+                <button>Statblock</button>
+                <i class="fa fa-trash"></i>
+            </div>
+        </div>
+        <div>
+            <div><i class="fa fa-dumbbell"></i> +${item.defenses.fortitude}</div>
+            <div><i class="fa fa-bolt"></i> +${item.defenses.reflex}</div>
+            <div><i class="fa fa-brain"></i> +${item.defenses.will}</div>
+            <div><i class="fa fa-eye"></i> +${item.senses.perception}</div>
+        </div>
+        <div><i class="fa fa-shield"></i> ${item.defenses.ac}</div>
+    `;
+
+    monster.getElementsByTagName("button")[0].onclick = () => displayStatblock(item);
+    monster.getElementsByTagName("i")[0].onclick = () => deleteTrackerParticipant(0);
+    return monster;
+}
+
+function deleteTrackerParticipant(index) {
+    document.getElementById("encounter-tracker").children[index + 1].remove();
 }
 
 function createTraitBar(traits) {
@@ -72,19 +104,6 @@ function createTraitChip(name, extraClass) {
     chip.textContent = name;
     container.appendChild(chip);
 }
-
-function listValue(name, value) {
-    return !value ? "" : `<b>${name}</b> ${value};`
-}
-
-function listArray(name, array) {
-    return array.length === 0 ? "" : `<b>${name}</b> ${array.join(", ")};`
-}
-
-invoke("get_all").then(data => {
-    console.log(data);
-    loadTableData(data)
-});
 
 $("#filter-text").on("input", async function() {
     const value = $(this).val();
