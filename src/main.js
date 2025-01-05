@@ -44,14 +44,16 @@ function displayStatblock(item) {
     document.getElementById("statblock-speed").innerHTML = `<b>Speed</b> ${mapper.listValue("", item.speed.base)} ${mapper.listArray("", item.speed.rest)}`;
 }
 
-async function onAddToTrackerClick(item) {
+function onAddToTrackerClick(item) {
     const tracker = document.getElementById("encounter-tracker");
-    tracker.appendChild(createTrackerParticipant(item));
-    await invoke("add_to_tracker", {monsterName: item.name});
+    const participant = createTrackerParticipant(item);
+    tracker.appendChild(participant);
+    invoke("add_to_tracker", {monsterName: item.name, id: participant.id}).then(() => {});
 }
 
 function createTrackerParticipant(item) {
     const monster = document.createElement("div");
+    monster.id = crypto.randomUUID();
     monster.classList = "tracker-participant side-by-side"
     monster.innerHTML = `
         <div>Initiative</div>
@@ -76,12 +78,13 @@ function createTrackerParticipant(item) {
     `;
 
     monster.getElementsByTagName("button")[0].onclick = () => displayStatblock(item);
-    monster.getElementsByTagName("i")[0].onclick = () => deleteTrackerParticipant(0);
+    monster.getElementsByClassName("fa-trash")[0].onclick = () => deleteTrackerParticipant(monster.id);
     return monster;
 }
 
-function deleteTrackerParticipant(index) {
-    document.getElementById("encounter-tracker").children[index + 1].remove();
+function deleteTrackerParticipant(id) {
+    document.getElementById(id).remove();
+    invoke("remove_from_tracker", {id: id});
 }
 
 function createTraitBar(traits) {

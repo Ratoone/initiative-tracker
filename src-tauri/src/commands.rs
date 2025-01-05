@@ -2,11 +2,11 @@ use std::sync::Mutex;
 
 use tauri::Manager;
 
-use crate::{bestiary::Bestiary, statblock::Monster};
+use crate::{bestiary::{Bestiary, Participant}, statblock::Monster};
 
 pub struct AppState {
   bestiary: Bestiary,
-  tracker: Vec<Monster>,
+  tracker: Vec<Participant>,
 }
 
 impl AppState {
@@ -67,9 +67,22 @@ pub async fn open_player_view(handle: tauri::AppHandle) {
 }
 
 #[tauri::command]
-pub fn add_to_tracker(state: tauri::State<'_, Mutex<AppState>>, monster_name: &str) {
+pub fn add_to_tracker(state: tauri::State<'_, Mutex<AppState>>, monster_name: &str, id: &str) {
     let mut app_state = state.lock().unwrap();
     let monster: Monster = app_state.bestiary.find_by_name(monster_name).unwrap().clone();
-    println!("{:?}", &monster);
-    app_state.tracker.push(monster);
+    let mut participant: Participant = monster.into();
+    participant.id = id.to_string();
+    app_state.tracker.push(participant);
 }
+
+#[tauri::command]
+pub fn get_tracker(state: tauri::State<'_, Mutex<AppState>>) -> Vec<Participant> {
+    let app_state = state.lock().unwrap();
+    app_state.tracker.clone()
+}
+
+#[tauri::command]
+pub fn remove_from_tracker(state: tauri::State<'_, Mutex<AppState>>, id: &str) {
+    let mut app_state = state.lock().unwrap();
+    app_state.tracker.retain(|participant| participant.id != id);
+} 

@@ -15,6 +15,8 @@ pub fn run() {
             commands::get_by_trait,
             commands::open_player_view,
             commands::add_to_tracker,
+            commands::get_tracker,
+            commands::remove_from_tracker,
         ])
         .manage(Mutex::new(commands::AppState::new()))
         .run(tauri::generate_context!())
