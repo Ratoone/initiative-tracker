@@ -1,6 +1,7 @@
-use crate::{deserialize::walk_bestiary, statblock::Monster};
+use crate::statblock::Monster;
 
-#[derive(Default)]
+use super::deserialize::walk_bestiary;
+
 pub struct Bestiary {
     pub monsters: Vec<Monster>,
 }

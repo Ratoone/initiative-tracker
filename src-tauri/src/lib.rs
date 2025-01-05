@@ -2,7 +2,6 @@ use std::sync::Mutex;
 
 mod bestiary;
 mod commands;
-mod deserialize;
 mod statblock;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

@@ -4,7 +4,6 @@ use tauri::Manager;
 
 use crate::{bestiary::Bestiary, statblock::Monster};
 
-#[derive(Default)]
 pub struct AppState {
   bestiary: Bestiary,
   tracker: Vec<Monster>,

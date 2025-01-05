@@ -60,7 +60,7 @@ function createTrackerParticipant(item) {
                 <div class="level">${item.lvl}</div>
                 <div>${item.name}</div>
             </div>
-            <progress value="${item.hp}" max="${item.hp}"></progress>
+            <div class="health-bar"><i class="fa fa-heart"></i> ${item.hp}/${item.hp}</div>
             <div class="side-by-side">
                 <button>Statblock</button>
                 <i class="fa fa-trash"></i>

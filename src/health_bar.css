@@ -1,8 +1,8 @@
-progress[value] {
+.health-bar {
     --w: 200px;
-    --color: linear-gradient(90deg,#ff6161,#1ecd1e) 0/var(--w);
+    --color: linear-gradient(90deg, #ff6161, #1ecd1e) 0/var(--w);
     --background: lightgrey;
-  
+
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
@@ -10,17 +10,5 @@ progress[value] {
     width: var(--w);
     margin: 0 10px;
     border-radius: 10em;
-    background: var(--background);
-  }
-  progress[value]::-webkit-progress-bar {
-    border-radius: 10em;
-    background: var(--background);
-  }
-  progress[value]::-webkit-progress-value {
-    border-radius: 10em;
     background: var(--color);
-  }
-  progress[value]::-moz-progress-bar {
-    border-radius: 10em;
-    background: var(--color);
-  }
+}
