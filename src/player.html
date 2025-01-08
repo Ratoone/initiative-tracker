@@ -7,14 +7,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tauri App</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- <script type="module" src="/main.js" defer></script> -->
+    <script type="module" src="/player.js" defer></script>
 </head>
 
 <body>
     <main class="container">
-        <h1>Welcome to Tauri</h1>
+        <h1>Combat Tracker</h1>
 
         <div class="main-layout">
+            <table id="combatants">
+                <thead>
+                    <tr>
+                        <th>Init.</th>
+                        <th>Name</th>
+                        <th>Health</th>
+                        <th>Cond.</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
         </div>
     </main>
 </body>

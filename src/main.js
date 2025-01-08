@@ -6,6 +6,10 @@ invoke("get_all").then(data => {
     loadTableData(data)
 });
 
+invoke("get_tracker").then(data => {
+    loadCombatants(data);
+});
+
 function loadTableData(items) {
     const table = document.getElementById("monster-list-body");
     table.innerHTML = "";
@@ -46,39 +50,48 @@ function displayStatblock(item) {
 
 function onAddToTrackerClick(item) {
     const tracker = document.getElementById("encounter-tracker");
-    const participant = createTrackerParticipant(item);
+    const combatant = mapper.mapCombatant(item);
+    const participant = createTrackerParticipant(combatant, item);
     tracker.appendChild(participant);
     invoke("add_to_tracker", {monsterName: item.name, id: participant.id}).then(() => {});
 }
 
-function createTrackerParticipant(item) {
+function loadCombatants(combatants) {
+    const tracker = document.getElementById("encounter-tracker");
+    combatants.forEach(combatant => {
+        const participant = createTrackerParticipant(combatant);
+        tracker.appendChild(participant);
+    });
+}
+
+function createTrackerParticipant(combatant, item) {
     const monster = document.createElement("div");
-    monster.id = crypto.randomUUID();
+    monster.id = combatant.id;
     monster.classList = "tracker-participant side-by-side"
     monster.innerHTML = `
         <div>Initiative</div>
         <div class="participant-general">
             <div class="side-by-side">
-                <div class="level">${item.lvl}</div>
-                <div>${item.name}</div>
+                <div class="level">${combatant.lvl}</div>
+                <div>${combatant.name}</div>
             </div>
-            <div class="health-bar"><i class="fa fa-heart"></i> ${item.hp}/${item.hp}</div>
+            <div class="health-bar"><i class="fa fa-heart"></i> ${combatant.hp}/${combatant.max_hp}</div>
             <div class="side-by-side">
                 <button>Statblock</button>
                 <i class="fa fa-trash"></i>
             </div>
         </div>
         <div>
-            <div><i class="fa fa-dumbbell"></i> +${item.defenses.fortitude}</div>
-            <div><i class="fa fa-bolt"></i> +${item.defenses.reflex}</div>
-            <div><i class="fa fa-brain"></i> +${item.defenses.will}</div>
-            <div><i class="fa fa-eye"></i> +${item.senses.perception}</div>
+            <div><i class="fa fa-dumbbell"></i> +${combatant.defenses.fortitude}</div>
+            <div><i class="fa fa-bolt"></i> +${combatant.defenses.reflex}</div>
+            <div><i class="fa fa-brain"></i> +${combatant.defenses.will}</div>
+            <div><i class="fa fa-eye"></i> +${combatant.perception}</div>
         </div>
-        <div><i class="fa fa-shield"></i> ${item.defenses.ac}</div>
+        <div><i class="fa fa-shield"></i> ${combatant.defenses.ac}</div>
     `;
 
     monster.getElementsByTagName("button")[0].onclick = () => displayStatblock(item);
-    monster.getElementsByClassName("fa-trash")[0].onclick = () => deleteTrackerParticipant(monster.id);
+    monster.getElementsByClassName("fa-trash")[0].onclick = () => deleteTrackerParticipant(combatant.id);
     return monster;
 }
 

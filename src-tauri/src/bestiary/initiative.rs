@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::statblock::Monster;
+use crate::statblock::{Defenses, Monster};
 
 #[derive(Serialize, Clone)]
 enum Type {
@@ -22,6 +22,9 @@ pub struct Participant {
     initiative: i64,
     conditions: Vec<Condition>,
     notes: String,
+    lvl: i64,
+    defenses: Defenses,
+    perception: i64,
 }
 
 impl Into<Participant> for Monster {
@@ -35,6 +38,9 @@ impl Into<Participant> for Monster {
             initiative: 0,
             conditions: vec![],
             notes: String::new(),
+            lvl: self.lvl,
+            defenses: self.defenses,
+            perception: self.senses.perception,
         }
     }
 }
