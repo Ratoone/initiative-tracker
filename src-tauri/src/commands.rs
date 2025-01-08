@@ -1,9 +1,10 @@
 use std::sync::Mutex;
 
-use tauri::Manager;
+use tauri::{AppHandle, Emitter, Manager};
 
 use crate::{bestiary::{Bestiary, Participant}, statblock::Monster};
 
+const PLAYER_VIEW: &str = "player_view";
 pub struct AppState {
   bestiary: Bestiary,
   tracker: Vec<Participant>,
@@ -51,13 +52,13 @@ pub fn get_by_trait(state: tauri::State<'_, Mutex<AppState>>, name: &str) -> Vec
 }
 
 #[tauri::command]
-pub async fn open_player_view(handle: tauri::AppHandle) {
-    match handle.get_webview_window("playerView") {
+pub async fn open_player_view(handle: AppHandle) {
+    match handle.get_webview_window(PLAYER_VIEW) {
         Some(window) => window.set_focus().unwrap(),
         None => {
             tauri::WebviewWindowBuilder::new(
                 &handle,
-                "playerView",
+                PLAYER_VIEW,
                 tauri::WebviewUrl::App("player.html".into()),
             )
             .build()
@@ -67,12 +68,13 @@ pub async fn open_player_view(handle: tauri::AppHandle) {
 }
 
 #[tauri::command]
-pub fn add_to_tracker(state: tauri::State<'_, Mutex<AppState>>, monster_name: &str, id: &str) {
+pub fn add_to_tracker(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, monster_name: &str, id: &str) {
     let mut app_state = state.lock().unwrap();
     let monster: Monster = app_state.bestiary.find_by_name(monster_name).unwrap().clone();
     let mut participant: Participant = monster.into();
     participant.id = id.to_string();
     app_state.tracker.push(participant);
+    app.emit("tracker_updated", "").unwrap();
 }
 
 #[tauri::command]
@@ -82,7 +84,8 @@ pub fn get_tracker(state: tauri::State<'_, Mutex<AppState>>) -> Vec<Participant>
 }
 
 #[tauri::command]
-pub fn remove_from_tracker(state: tauri::State<'_, Mutex<AppState>>, id: &str) {
+pub fn remove_from_tracker(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str) {
     let mut app_state = state.lock().unwrap();
     app_state.tracker.retain(|participant| participant.id != id);
+    app.emit("tracker_updated", "").unwrap();
 } 

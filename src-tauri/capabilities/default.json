@@ -3,11 +3,16 @@
   "identifier": "default",
   "description": "Capability for the main window",
   "windows": [
-    "main"
+    "main",
+    "player_view"
+  ],
+  "webviews": [
+    "player-view"
   ],
   "permissions": [
     "core:default",
     "opener:default",
-    "log:default"
+    "log:default",
+    "core:event:allow-listen"
   ]
 }
