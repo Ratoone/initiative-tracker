@@ -60,7 +60,7 @@ function mapHealthColor(percent) {
 }
 
 function mapHealthPercent(percent) {
-    if (percent === 1) {
+    if (percent >= 1) {
         return "UNHARMED";
     }
 
@@ -76,6 +76,9 @@ function mapHealthPercent(percent) {
         return "BADLY INJURED";
     }
 
-    return "NEAR DEATH";
-
+    if (percent > 0) {
+        return "NEAR DEATH";
+    }
+    
+    return "DEAD";
 }

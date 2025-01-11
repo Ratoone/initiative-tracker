@@ -75,7 +75,7 @@ function createTrackerParticipant(combatant, item) {
                 <div class="level">${combatant.lvl}</div>
                 <div>${combatant.name}</div>
             </div>
-            <div class="health-bar"><i class="fa fa-heart"></i> ${combatant.hp}/${combatant.max_hp}</div>
+            <div class="health-bar"><i class="fa fa-heart"></i> <span contenteditable="true">${combatant.hp}</span>/${combatant.max_hp}</div>
             <div class="side-by-side">
                 <button>Statblock</button>
                 <i class="fa fa-trash"></i>
@@ -92,6 +92,27 @@ function createTrackerParticipant(combatant, item) {
 
     monster.getElementsByTagName("button")[0].onclick = () => displayStatblock(item);
     monster.getElementsByClassName("fa-trash")[0].onclick = () => deleteTrackerParticipant(combatant.id);
+    
+    let currentHp = monster.getElementsByTagName("span")[0];
+    currentHp.onkeydown = (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            setTimeout(function() {
+                currentHp.blur();
+            }, 0);
+            return false;
+        }
+        return true;
+    };
+
+    currentHp.onblur = () => {
+        let value = parseInt(currentHp.innerText.replace("[a-zA-Z]", ""));
+        currentHp.innerText = value;
+        console.log(value);
+        if (value !== NaN) {
+            invoke("update_hp", {id: monster.id, value: value}).then(() =>{});
+        }
+    }
     return monster;
 }
 

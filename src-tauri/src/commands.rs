@@ -89,3 +89,13 @@ pub fn remove_from_tracker(app: AppHandle, state: tauri::State<'_, Mutex<AppStat
     app_state.tracker.retain(|participant| participant.id != id);
     app.emit("tracker_updated", "").unwrap();
 } 
+
+#[tauri::command]
+pub fn update_hp(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str, value: i64) {
+    let mut app_state = state.lock().unwrap();
+    let mut participant = app_state.tracker.iter_mut().find(|m| m.id == id);
+    if let Some(ref mut target) = participant {
+        target.hp = value;
+        app.emit("tracker_updated", "").unwrap();
+    }
+} 
