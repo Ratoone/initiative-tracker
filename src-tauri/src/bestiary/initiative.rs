@@ -16,7 +16,7 @@ pub enum Condition {
 pub struct Participant {
     pub id: String,
     kind: Type,
-    name: String,
+    pub name: String,
     max_hp: i64,
     pub hp: i64,
     initiative: i64,

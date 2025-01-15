@@ -99,3 +99,13 @@ pub fn update_hp(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &
         app.emit("tracker_updated", "").unwrap();
     }
 } 
+
+#[tauri::command]
+pub fn update_name(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str, value: &str) {
+    let mut app_state = state.lock().unwrap();
+    let mut participant = app_state.tracker.iter_mut().find(|m| m.id == id);
+    if let Some(ref mut target) = participant {
+        target.name = value.to_string();
+        app.emit("tracker_updated", "").unwrap();
+    }
+} 

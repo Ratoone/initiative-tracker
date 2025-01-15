@@ -18,6 +18,7 @@ pub fn run() {
             commands::get_tracker,
             commands::remove_from_tracker,
             commands::update_hp,
+            commands::update_name,
         ])
         .manage(Mutex::new(commands::AppState::new()))
         .run(tauri::generate_context!())

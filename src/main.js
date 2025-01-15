@@ -73,9 +73,9 @@ function createTrackerParticipant(combatant, item) {
         <div class="participant-general">
             <div class="side-by-side">
                 <div class="level">${combatant.lvl}</div>
-                <div>${combatant.name}</div>
+                <div class="editable-name" contenteditable="true">${combatant.name}</div>
             </div>
-            <div class="health-bar"><i class="fa fa-heart"></i> <span contenteditable="true">${combatant.hp}</span>/${combatant.max_hp}</div>
+            <div class="health-bar"><i class="fa fa-heart"></i> <span class="editable-hp" contenteditable="true">${combatant.hp}</span>/${combatant.max_hp}</div>
             <div class="side-by-side">
                 <button>Statblock</button>
                 <i class="fa fa-trash"></i>
@@ -93,18 +93,20 @@ function createTrackerParticipant(combatant, item) {
     monster.getElementsByTagName("button")[0].onclick = () => displayStatblock(item);
     monster.getElementsByClassName("fa-trash")[0].onclick = () => deleteTrackerParticipant(combatant.id);
     
-    let currentHp = monster.getElementsByTagName("span")[0];
-    currentHp.onkeydown = (e) => {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            setTimeout(function() {
-                currentHp.blur();
-            }, 0);
-            return false;
-        }
-        return true;
-    };
-
+    monster.querySelectorAll("[contenteditable=true]").forEach(content => {
+        content.onkeydown = (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                setTimeout(function() {
+                    content.blur();
+                }, 0);
+                return false;
+            }
+            return true;
+        };
+    });
+    
+    let currentHp = monster.getElementsByClassName("editable-hp")[0];
     currentHp.onblur = () => {
         let value = parseInt(currentHp.innerText.replace("[a-zA-Z]", ""));
         currentHp.innerText = value;
@@ -113,6 +115,12 @@ function createTrackerParticipant(combatant, item) {
             invoke("update_hp", {id: monster.id, value: value}).then(() =>{});
         }
     }
+    let name = monster.getElementsByClassName("editable-name")[0];
+    name.onblur = () => {
+        console.log(name.innerText);
+        invoke("update_name", {id: monster.id, value: name.innerText}).then(() =>{});
+    }
+
     return monster;
 }
 
