@@ -34,3 +34,73 @@ export function newPlayer() {
         conditions: [],
     };
 }
+
+export function levelToDc(level) {
+    if (level < 20) {
+        return level + Math.floor(level / 3) + 14;
+    }
+
+    return 2 * level;
+}
+
+export function rarityDcMod(rarity) {
+    switch (rarity) {
+        case "uncommon":
+            return 2;
+        case "rare":
+            return 5;
+        case "uniqeu":
+            return 10;
+        default:
+            return 0;
+    }
+}
+
+export function traitToRcSkill(trait) {
+    switch (trait) {
+        case "aberration": 
+            return "Occultism";
+        case "animal": 
+            return "Nature";
+        case "astral": 
+            return "Occultism";
+        case "beast": 
+            return "Arcana, Nature";
+        case "celestial": 
+            return "Religion";
+        case "construct": 
+            return "Arcana, Crafting";
+        case "dragon": 
+            return "Arcana";
+        case "dream": 
+            return "Occultism";
+        case "elemental": 
+            return "Arcana, Nature";
+        case "ethereal": 
+            return "Occultism";
+        case "fey": 
+            return "Nature";
+        case "fiend": 
+            return "Religion";
+        case "fungus": 
+            return "Nature";
+        case "humanoid": 
+            return "Society";
+        case "monitor": 
+            return "Religion";
+        case "ooze": 
+            return "Occultism";
+        case "plant": 
+            return "Nature";
+        case "shade": 
+            return "Religion";
+        case "spirit": 
+            return "Occultism";
+        case "time": 
+            return "Occultism";
+        case "undead": 
+            return "Religion";
+    }
+
+    return "";
+}

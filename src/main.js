@@ -36,6 +36,14 @@ function displayStatblock(item) {
     document.getElementById("statblock-name").innerHTML = `<b>${item.name}</b>`;
     document.getElementById("statblock-level").innerText = item.lvl;
     document.getElementById("statblock-level").classList = `${item.traits.rarity}-trait level`
+    document.getElementById("statblock-dc").innerHTML = item.traits.rest.map(trait => {
+        let skill = mapper.traitToRcSkill(trait);
+        if (skill === "") {
+            return "";
+        }
+        
+        return mapper.listValue("Recall Knowledge", `- ${trait} (${skill}) DC ${mapper.levelToDc(item.lvl) + mapper.rarityDcMod(item.traits.rarity)}`);
+    }).filter(text => text !== "").join("<br>");
     
     createTraitBar(item.traits);
     document.getElementById("statblock-senses").innerHTML = `${mapper.listValue("Perception", item.senses.perception)} ${mapper.listValue("", item.senses.details)} ${mapper.listArray("", item.senses.rest)}`;
