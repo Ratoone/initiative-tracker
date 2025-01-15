@@ -1,5 +1,6 @@
 import * as mapper from "./mapper.js";
 
+"use strict";
 const { invoke } = window.__TAURI__.core;
 
 invoke("get_all").then(data => {
@@ -41,7 +42,7 @@ function displayStatblock(item) {
         if (skill === "") {
             return "";
         }
-        
+
         return mapper.listValue("Recall Knowledge", `- ${trait} (${skill}) DC ${mapper.levelToDc(item.lvl) + mapper.rarityDcMod(item.traits.rarity)}`);
     }).filter(text => text !== "").join("<br>");
     
@@ -122,7 +123,7 @@ function createTrackerParticipant(combatant, item) {
     
     let currentHp = monster.getElementsByClassName("editable-hp")[0];
     currentHp.onblur = () => {
-        let value = parseInt(currentHp.innerText.replace("[a-zA-Z]", ""));
+        let value = parseInt(eval(currentHp.innerText.replace(/[^0-9\+\-]/, "")));
         currentHp.innerText = value;
         console.log(value);
         if (value !== NaN) {
