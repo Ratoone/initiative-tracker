@@ -58,8 +58,12 @@ function onAddToTrackerClick(item) {
 
 function loadCombatants(combatants) {
     const tracker = document.getElementById("encounter-tracker");
-    combatants.forEach(combatant => {
-        const participant = createTrackerParticipant(combatant);
+    combatants.forEach(async combatant => {
+        let item;
+        if (combatant.kind.MONSTER !== undefined) {
+            item = await invoke("get_by_name", {name: combatant.kind.MONSTER});
+        }
+        const participant = createTrackerParticipant(combatant, item);
         tracker.appendChild(participant);
     });
 }
@@ -170,9 +174,9 @@ async function getFilteredMonsterData(searchValue, searchBy) {
 
     switch (searchBy) {
         case "Name":
-            return await invoke("get_by_name", {name: searchValue});
+            return await invoke("find_by_name", {name: searchValue});
         case "Trait":
-            return await invoke("get_by_trait", {name: searchValue});
+            return await invoke("find_by_trait", {name: searchValue});
         default:
             return [];
     }

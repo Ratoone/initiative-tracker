@@ -28,7 +28,7 @@ pub fn get_all(state: tauri::State<'_, Mutex<AppState>>) -> Vec<Monster> {
 }
 
 #[tauri::command]
-pub fn get_by_name(state: tauri::State<'_, Mutex<AppState>>, name: &str) -> Vec<Monster> {
+pub fn find_by_name(state: tauri::State<'_, Mutex<AppState>>, name: &str) -> Vec<Monster> {
     let cache = &state.lock().unwrap().bestiary;
     let mut monsters: Vec<Monster> = cache.monsters.clone();
     monsters.retain(|monster| monster.name.to_lowercase().contains(name));
@@ -37,7 +37,13 @@ pub fn get_by_name(state: tauri::State<'_, Mutex<AppState>>, name: &str) -> Vec<
 }
 
 #[tauri::command]
-pub fn get_by_trait(state: tauri::State<'_, Mutex<AppState>>, name: &str) -> Vec<Monster> {
+pub fn get_by_name(state: tauri::State<'_, Mutex<AppState>>, name: &str) -> Option<Monster> {
+    let cache = &state.lock().unwrap().bestiary;
+    cache.find_by_name(name).cloned()
+}
+
+#[tauri::command]
+pub fn find_by_trait(state: tauri::State<'_, Mutex<AppState>>, name: &str) -> Vec<Monster> {
     let cache = &state.lock().unwrap().bestiary;
     let mut monsters: Vec<Monster> = cache.monsters.clone();
     monsters.retain(|monster| {
