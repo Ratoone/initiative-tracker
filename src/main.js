@@ -72,25 +72,27 @@ function createTrackerParticipant(combatant, item) {
         <div>Initiative</div>
         <div class="participant-general">
             <div class="side-by-side">
-                <div class="level">${combatant.lvl}</div>
+                <div class="level">${combatant.lvl ?? ""}</div>
                 <div class="editable-name" contenteditable="true">${combatant.name}</div>
             </div>
-            <div class="health-bar"><i class="fa fa-heart"></i> <span class="editable-hp" contenteditable="true">${combatant.hp}</span>/${combatant.max_hp}</div>
+            <div class="health-bar"><i class="fa fa-heart"></i> <span class="editable-hp" contenteditable="true">${combatant.hp ?? 0}</span>/${combatant.max_hp ?? 0}</div>
             <div class="side-by-side">
-                <button>Statblock</button>
+                ${item === undefined ? "" : "<button>Statblock</button>"}
                 <i class="fa fa-trash"></i>
             </div>
         </div>
         <div>
-            <div><i class="fa fa-dumbbell"></i> +${combatant.defenses.fortitude}</div>
-            <div><i class="fa fa-bolt"></i> +${combatant.defenses.reflex}</div>
-            <div><i class="fa fa-brain"></i> +${combatant.defenses.will}</div>
-            <div><i class="fa fa-eye"></i> +${combatant.perception}</div>
+            <div><i class="fa fa-dumbbell"></i> +${combatant.defenses?.fortitude ?? 0}</div>
+            <div><i class="fa fa-bolt"></i> +${combatant.defenses?.reflex ?? 0}</div>
+            <div><i class="fa fa-brain"></i> +${combatant.defenses?.will ?? 0}</div>
+            <div><i class="fa fa-eye"></i> +${combatant.perception ?? 0}</div>
         </div>
-        <div><i class="fa fa-shield"></i> ${combatant.defenses.ac}</div>
+        <div><i class="fa fa-shield"></i> ${combatant.defenses?.ac ?? 0}</div>
     `;
 
-    monster.getElementsByTagName("button")[0].onclick = () => displayStatblock(item);
+    if (item !== undefined) {
+        monster.getElementsByTagName("button")[0].onclick = () => displayStatblock(item);
+    }
     monster.getElementsByClassName("fa-trash")[0].onclick = () => deleteTrackerParticipant(combatant.id);
     
     monster.querySelectorAll("[contenteditable=true]").forEach(content => {
@@ -178,4 +180,12 @@ async function getFilteredMonsterData(searchValue, searchBy) {
 
 $("#player-view").on("click", function() {
     invoke("open_player_view");
+});
+
+$("#add-player").on("click", () => {
+    const tracker = document.getElementById("encounter-tracker");
+    const combatant = mapper.newPlayer();
+    const participant = createTrackerParticipant(combatant);
+    tracker.appendChild(participant);
+    invoke("add_player", {id: participant.id}).then(() => {});
 });

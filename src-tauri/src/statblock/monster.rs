@@ -18,7 +18,7 @@ pub struct Monster {
     pub speed: Speeds,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Default)]
 pub struct Defenses {
     pub ac: i64,
     pub ac_detail: String,

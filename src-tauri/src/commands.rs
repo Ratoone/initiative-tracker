@@ -109,3 +109,11 @@ pub fn update_name(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id:
         app.emit("tracker_updated", "").unwrap();
     }
 } 
+
+#[tauri::command]
+pub fn add_player(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str) {
+    let mut app_state = state.lock().unwrap();
+    let participant: Participant = Participant::new(id);
+    app_state.tracker.push(participant);
+    app.emit("tracker_updated", "").unwrap();
+}

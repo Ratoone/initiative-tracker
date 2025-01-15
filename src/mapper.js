@@ -26,3 +26,11 @@ export function mapCombatant(item) {
         perception: item.senses.perception,
     };
 }
+
+export function newPlayer() {
+    return {
+        id: crypto.randomUUID(),
+        name: "",
+        conditions: [],
+    };
+}
