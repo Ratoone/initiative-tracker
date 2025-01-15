@@ -21,6 +21,7 @@ pub fn run() {
             commands::update_hp,
             commands::update_name,
             commands::add_player,
+            commands::update_initiative,
         ])
         .manage(Mutex::new(commands::AppState::new()))
         .run(tauri::generate_context!())

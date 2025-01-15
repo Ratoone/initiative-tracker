@@ -82,7 +82,7 @@ function createTrackerParticipant(combatant, item) {
     monster.id = combatant.id;
     monster.classList = "tracker-participant side-by-side"
     monster.innerHTML = `
-        <div>Initiative</div>
+        <div class="editable-init" contenteditable="true">${combatant.initiative || "??"}</div>
         <div class="participant-general">
             <div class="side-by-side">
                 <div class="level">${combatant.lvl ?? ""}</div>
@@ -125,15 +125,27 @@ function createTrackerParticipant(combatant, item) {
     currentHp.onblur = () => {
         let value = parseInt(eval(currentHp.innerText.replace(/[^0-9\+\-]/, "")));
         currentHp.innerText = value;
-        console.log(value);
         if (value !== NaN) {
             invoke("update_hp", {id: monster.id, value: value}).then(() =>{});
         }
     }
+
     let name = monster.getElementsByClassName("editable-name")[0];
     name.onblur = () => {
-        console.log(name.innerText);
         invoke("update_name", {id: monster.id, value: name.innerText}).then(() =>{});
+    }
+
+    let initiative = monster.getElementsByClassName("editable-init")[0];
+    initiative.onblur = () => {
+        let value = parseInt(initiative.innerText.replace(/[^0-9\+\-]/, ""));
+        initiative.innerText = value;
+        if (value !== NaN) {
+            invoke("update_initiative", {id: monster.id, value: value}).then(() =>{});
+            document.getElementById("encounter-tracker").innerHTML = "";
+            invoke("get_tracker").then(data => {
+                loadCombatants(data);
+            });
+        }
     }
 
     return monster;

@@ -9,6 +9,6 @@
     border: none;
     width: var(--w);
     margin: 0 10px;
-    border-radius: 10em;
+    border-radius: 10px;
     background: var(--color);
 }

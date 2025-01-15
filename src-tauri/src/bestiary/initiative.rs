@@ -20,7 +20,7 @@ pub struct Participant {
     pub name: String,
     max_hp: i64,
     pub hp: i64,
-    initiative: i64,
+    pub initiative: i64,
     pub conditions: Vec<Condition>,
     pub notes: String,
     lvl: i64,

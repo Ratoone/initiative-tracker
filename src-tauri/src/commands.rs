@@ -123,3 +123,14 @@ pub fn add_player(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: 
     app_state.tracker.push(participant);
     app.emit("tracker_updated", "").unwrap();
 }
+
+#[tauri::command]
+pub fn update_initiative(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str, value: i64) {
+    let mut app_state = state.lock().unwrap();
+    let mut participant = app_state.tracker.iter_mut().find(|m| m.id == id);
+    if let Some(ref mut target) = participant {
+        target.initiative = value;
+        app_state.tracker.sort_by(|m1, m2| m2.initiative.cmp(&m1.initiative));
+        app.emit("tracker_updated", "").unwrap();
+    }
+} 
