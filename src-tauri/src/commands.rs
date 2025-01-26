@@ -2,7 +2,7 @@ use std::sync::Mutex;
 
 use tauri::{AppHandle, Emitter, Manager};
 
-use crate::{bestiary::{Bestiary, Participant}, statblock::Monster};
+use crate::{bestiary::{Bestiary, Condition, Participant, CONDITIONS_WITHOUT_VALUE, CONDITIONS_WITH_VALUE}, statblock::Monster};
 
 const PLAYER_VIEW: &str = "player_view";
 pub struct AppState {
@@ -134,3 +134,64 @@ pub fn update_initiative(app: AppHandle, state: tauri::State<'_, Mutex<AppState>
         app.emit("tracker_updated", "").unwrap();
     }
 } 
+
+#[tauri::command]
+pub fn add_condition(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str, name: &str) {
+    let mut app_state = state.lock().unwrap();
+    let participant = app_state.tracker.iter_mut().find(|m| m.id == id);
+    if let Some(target) = participant {
+        let existing_condition = target.conditions.iter_mut().find(|condition| condition.variant == name);
+        match existing_condition {
+            None => {
+                if CONDITIONS_WITH_VALUE.contains(&name) {
+                    target.conditions.push(Condition {
+                        variant: name.to_string(),
+                        value: Some(1),
+                    });
+                } else if CONDITIONS_WITHOUT_VALUE.contains(&name) {
+                    target.conditions.push(Condition {
+                        variant: name.to_string(),
+                        value: None,
+                    });
+                } else {
+                    println!("Error, no valid condition");
+                    return;
+                }
+            },
+            Some(condition) => {
+                if let Some(value) = &mut condition.value {
+                    *value += 1;
+                }
+            },
+        };
+        app.emit("tracker_updated", "").unwrap();
+    }
+}
+
+#[tauri::command]
+pub fn remove_condition(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str, name: &str) {
+    let mut app_state = state.lock().unwrap();
+    let participant = app_state.tracker.iter_mut().find(|m| m.id == id);
+    if let Some(target) = participant {
+        let existing_condition = target.conditions.iter_mut().find(|condition| condition.variant == name);
+        match existing_condition {
+            Some(condition) => {
+                if let Some(value) = &mut condition.value {
+                    *value -= 1;
+                    if *value > 0 {
+                        app.emit("tracker_updated", "").unwrap();
+                        return;
+                    }
+                }
+                let index = target.conditions.iter().position(|x| x.variant == name).unwrap();
+                target.conditions.remove(index);
+            }
+            None => {
+                println!("Error, no valid condition");
+                return;
+            },
+        }
+
+        app.emit("tracker_updated", "").unwrap();
+    }
+}

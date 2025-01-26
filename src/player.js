@@ -1,3 +1,5 @@
+import * as mapper from "./mapper.js";
+
 "use strict";
 
 const { invoke } = window.__TAURI__.core;
@@ -34,6 +36,9 @@ function loadCombatants(items) {
         }
 
         let conditions = combatant.insertCell();
+        item.conditions.forEach(existingCondition => {
+            conditions.appendChild(mapper.createCondition(undefined, existingCondition.variant));
+        });
 
         let notes = combatant.insertCell();
         notes.innerHTML = item.notes;

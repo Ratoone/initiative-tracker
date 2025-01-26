@@ -7,9 +7,13 @@ invoke("get_all").then(data => {
     loadTableData(data)
 });
 
-invoke("get_tracker").then(data => {
-    loadCombatants(data);
-});
+reload();
+
+function reload() {
+    invoke("get_tracker").then(data => {
+        loadCombatants(data);
+    });
+}
 
 function loadTableData(items) {
     const table = document.getElementById("monster-list-body");
@@ -33,7 +37,6 @@ function loadTableData(items) {
 }
 
 function displayStatblock(item) {
-    console.log(item);
     document.getElementById("statblock-name").innerHTML = `<b>${item.name}</b>`;
     document.getElementById("statblock-level").innerText = item.lvl;
     document.getElementById("statblock-level").classList = `${item.traits.rarity}-trait level`
@@ -90,9 +93,14 @@ function createTrackerParticipant(combatant, item) {
             </div>
             <div class="health-bar"><i class="fa fa-heart"></i> <span class="editable-hp" contenteditable="true">${combatant.hp ?? 0}</span>/${combatant.max_hp ?? 0}</div>
             <div class="side-by-side">
-                ${item === undefined ? "" : "<button>Statblock</button>"}
+                <div class="dropdown">
+                    <button class="dropbtn">Add Condition</button>
+                    <div class="dropdown-content"></div>
+                </div>
+                ${item === undefined ? "" : "<button class='view-statblock'>Statblock</button>"}
                 <i class="fa fa-trash"></i>
             </div>
+            <div class="participant-conditions"></div>
         </div>
         <div>
             <div><i class="fa fa-dumbbell"></i> +${combatant.defenses?.fortitude ?? 0}</div>
@@ -104,7 +112,7 @@ function createTrackerParticipant(combatant, item) {
     `;
 
     if (item !== undefined) {
-        monster.getElementsByTagName("button")[0].onclick = () => displayStatblock(item);
+        monster.getElementsByClassName("view-statblock")[0].onclick = () => displayStatblock(item);
     }
     monster.getElementsByClassName("fa-trash")[0].onclick = () => deleteTrackerParticipant(combatant.id);
     
@@ -142,11 +150,27 @@ function createTrackerParticipant(combatant, item) {
         if (value !== NaN) {
             invoke("update_initiative", {id: monster.id, value: value}).then(() =>{});
             document.getElementById("encounter-tracker").innerHTML = "";
-            invoke("get_tracker").then(data => {
-                loadCombatants(data);
-            });
+            reload();
         }
     }
+
+    let conditionBox = monster.getElementsByClassName("participant-conditions")[0];
+    combatant.conditions.forEach(existingCondition => {
+        conditionBox.appendChild(mapper.createCondition(monster.id, existingCondition.variant));
+    });
+    
+    let conditionDropdown = monster.getElementsByClassName("dropdown-content")[0];
+    mapper.conditions.forEach(condition => {
+        const conditionChoice = document.createElement("a");
+        conditionChoice.innerText = condition;
+        conditionChoice.onclick = () => {
+            conditionBox.appendChild(mapper.createCondition(monster.id, condition));
+            invoke("add_condition", {id: monster.id, name: condition}).then(() => {});
+        };
+
+        conditionDropdown.appendChild(conditionChoice);
+        return `<a>${condition}</a>`
+    });
 
     return monster;
 }

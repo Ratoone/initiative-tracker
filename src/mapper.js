@@ -1,3 +1,5 @@
+const { invoke } = window.__TAURI__.core;
+
 export function formatSkills(skills) {
     return Object.entries(skills).reduce((str, [p, val]) => {
         return `${str} ${p} +${val}, `;
@@ -103,4 +105,53 @@ export function traitToRcSkill(trait) {
     }
 
     return "";
+}
+
+export const conditions = [
+    "Blinded", 
+    "Clumsy", 
+    "Concealed", 
+    "Confused", 
+    "Dazzled", 
+    "Doomed", 
+    "Drained", 
+    "Dying", 
+    "Enfeebled", 
+    "Fascinated", 
+    "Fatigued", 
+    "Fleeing", 
+    "Frightened", 
+    "Grabbed", 
+    "Hidden", 
+    "Immobilised", 
+    "OffGuard", 
+    "Prone", 
+    "Quickened", 
+    "Restrained", 
+    "Sickened", 
+    "Slowed", 
+    "Stunned", 
+    "Stupefied", 
+    "Unconscious", 
+    "Wounded"
+];
+
+export function createCondition(id, name) {
+    const cond = document.createElement("img");
+    cond.src = `/assets/conditions-svg/${name.toLowerCase()}.svg`;
+    cond.classList.add("condition");
+    cond.onclick = () => {
+        if (id != undefined) {
+            invoke("add_condition", {id: id, name: name}).then(() => {});
+        }
+    }
+
+    cond.oncontextmenu = (e) => {
+        e.preventDefault();
+        if (id != undefined) {
+            cond.remove();
+            invoke("remove_condition", {id: id, name: name}).then(() => {});
+        }
+    };
+    return cond;
 }

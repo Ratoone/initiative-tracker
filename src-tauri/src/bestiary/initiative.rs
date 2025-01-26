@@ -9,9 +9,42 @@ enum Type {
 }
 
 #[derive(Serialize, Clone)]
-pub enum Condition {
-
+pub struct Condition {
+    pub variant: String,
+    pub value: Option<i64>,
 }
+
+pub const CONDITIONS_WITHOUT_VALUE: &[&str] = &[
+    "Blinded",
+    "Concealed",
+    "Confused",
+    "Dazzled",
+    "Fascinated",
+    "Fatigued",
+    "Fleeing",
+    "Grabbed",
+    "Hidden",
+    "Immobilised",
+    "OffGuard",
+    "Prone",
+    "Quickened",
+    "Restrained",
+    "Unconscious",
+    ];
+
+pub const CONDITIONS_WITH_VALUE: &[&str] = &[
+    "Clumsy",
+    "Doomed",
+    "Drained",
+    "Dying",
+    "Enfeebled",
+    "Frightened",
+    "Sickened",
+    "Slowed",
+    "Stunned",
+    "Stupefied",
+    "Wounded"
+];
 
 #[derive(Serialize, Clone)]
 pub struct Participant {
