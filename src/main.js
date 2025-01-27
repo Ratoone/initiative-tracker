@@ -101,6 +101,7 @@ function createTrackerParticipant(combatant, item) {
                 <i class="fa fa-trash"></i>
             </div>
             <div class="participant-conditions"></div>
+            <div class="participant-notes" contenteditable="true">${combatant.notes ?? ""}</div>
         </div>
         <div>
             <div><i class="fa fa-dumbbell"></i> +${combatant.defenses?.fortitude ?? 0}</div>
@@ -141,6 +142,11 @@ function createTrackerParticipant(combatant, item) {
     let name = monster.getElementsByClassName("editable-name")[0];
     name.onblur = () => {
         invoke("update_name", {id: monster.id, value: name.innerText}).then(() =>{});
+    }
+
+    let notes = monster.getElementsByClassName("participant-notes")[0];
+    notes.onblur = () => {
+        invoke("update_notes", {id: monster.id, value: notes.innerText}).then(() =>{});
     }
 
     let initiative = monster.getElementsByClassName("editable-init")[0];

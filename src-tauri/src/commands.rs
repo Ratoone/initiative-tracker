@@ -195,3 +195,13 @@ pub fn remove_condition(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>
         app.emit("tracker_updated", "").unwrap();
     }
 }
+
+#[tauri::command]
+pub fn update_notes(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str, value: &str) {
+    let mut app_state = state.lock().unwrap();
+    let mut participant = app_state.tracker.iter_mut().find(|m| m.id == id);
+    if let Some(ref mut target) = participant {
+        target.notes = value.to_string();
+        app.emit("tracker_updated", "").unwrap();
+    }
+} 

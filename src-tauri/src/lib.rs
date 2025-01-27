@@ -24,6 +24,7 @@ pub fn run() {
             commands::update_initiative,
             commands::add_condition,
             commands::remove_condition,
+            commands::update_notes,
         ])
         .manage(Mutex::new(commands::AppState::new()))
         .run(tauri::generate_context!())
