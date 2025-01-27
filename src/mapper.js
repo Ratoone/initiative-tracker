@@ -136,12 +136,46 @@ export const conditions = [
     "Wounded"
 ];
 
-export function createCondition(id, name) {
+export function createCondition(id, name, value) {
+    if (!value && [
+        "Clumsy",
+        "Doomed",
+        "Drained",
+        "Dying",
+        "Enfeebled",
+        "Frightened",
+        "Sickened",
+        "Slowed",
+        "Stunned",
+        "Stupefied",
+        "Wounded"
+    ].includes(name)) {
+        value = 1;
+    }
+
+    const container = document.createElement("div");
+    container.style.position = "relative";
+    container.style.display = "inline-block";
+
     const cond = document.createElement("img");
     cond.src = `/assets/conditions-svg/${name.toLowerCase()}.svg`;
     cond.classList.add("condition");
+
+    container.appendChild(cond);
+    let badge;
+    if (value) {
+        badge = document.createElement("span");
+        badge.textContent = value;
+        badge.classList.add("condition-value");
+
+        container.appendChild(badge);
+    }
+
     cond.onclick = () => {
         if (id != undefined) {
+            if (value) {
+                badge.textContent = parseInt(badge.textContent) + 1;
+            }
             invoke("add_condition", {id: id, name: name}).then(() => {});
         }
     }
@@ -149,9 +183,14 @@ export function createCondition(id, name) {
     cond.oncontextmenu = (e) => {
         e.preventDefault();
         if (id != undefined) {
-            cond.remove();
+            if (!value || parseInt(badge.textContent) === 1) {
+                container.remove();
+            } else {
+                badge.textContent = parseInt(badge.textContent) - 1;
+            }
             invoke("remove_condition", {id: id, name: name}).then(() => {});
         }
     };
-    return cond;
+
+    return container;
 }

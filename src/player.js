@@ -37,7 +37,7 @@ function loadCombatants(items) {
 
         let conditions = combatant.insertCell();
         item.conditions.forEach(existingCondition => {
-            conditions.appendChild(mapper.createCondition(undefined, existingCondition.variant));
+            conditions.appendChild(mapper.createCondition(undefined, existingCondition.variant, existingCondition.value));
         });
 
         let notes = combatant.insertCell();

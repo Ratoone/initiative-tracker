@@ -162,7 +162,7 @@ function createTrackerParticipant(combatant, item) {
 
     let conditionBox = monster.getElementsByClassName("participant-conditions")[0];
     combatant.conditions.forEach(existingCondition => {
-        conditionBox.appendChild(mapper.createCondition(monster.id, existingCondition.variant));
+        conditionBox.appendChild(mapper.createCondition(monster.id, existingCondition.variant, existingCondition.value));
     });
     
     let conditionDropdown = monster.getElementsByClassName("dropdown-content")[0];
