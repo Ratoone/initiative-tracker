@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fs, path::Path};
 
-use crate::statblock::{Defenses, Endurances, Monster, Senses, Speeds, Traits};
+use crate::statblock::{Ability, Defenses, Endurances, Monster, Senses, Speeds, Traits};
 
 use serde_json::Value;
 use walkdir::WalkDir;
@@ -92,15 +92,24 @@ pub fn deserialize(path: &Path) -> Option<Monster> {
         languages: system["details"]["languages"]["value"].array_value(StringValue::get_string),
         language_detail: system["details"]["languages"]["details"].get_string(),
         speed: map_speed(&attributes["speed"]),
+        abilities: parsed["items"].array_value(map_ability),
     })
+}
+
+fn map_ability(item: &Value) -> Ability {
+    Ability {
+        name: item["name"].get_string(),
+        description: item["system"]["description"].string_value(),
+        actions: None,
+        traits: item["system"]["traits"]["value"].array_value(StringValue::get_string),
+    }
 }
 
 fn map_speed(speed: &Value) -> Speeds {
     Speeds {
         base: speed.int_value(),
-        rest: speed["otherSpeeds"].array_value(|el| {
-            format!("{} {}ft", el["type"].get_string(), el.int_value())
-        }),
+        rest: speed["otherSpeeds"]
+            .array_value(|el| format!("{} {}ft", el["type"].get_string(), el.int_value())),
     }
 }
 
@@ -118,7 +127,7 @@ fn map_senses(senses: &Value) -> Senses {
                 sense += format!(" {} feet", el["range"].get_int()).as_str();
             }
             sense
-        })
+        }),
     }
 }
 
@@ -185,7 +194,7 @@ fn map_traits(traits: &Value) -> Traits {
     Traits {
         size: map_size(&traits["size"].string_value()).to_string(),
         rarity: traits["rarity"].get_string(),
-        rest: traits["value"].array_value(StringValue::get_string)
+        rest: traits["value"].array_value(StringValue::get_string),
     }
 }
 
@@ -197,6 +206,6 @@ fn map_size(size: &String) -> &str {
         "lg" => "large",
         "huge" => "huge",
         "grg" => "gargantuan",
-        _ => ""
+        _ => "",
     }
 }

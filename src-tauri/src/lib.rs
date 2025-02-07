@@ -1,5 +1,7 @@
 use std::sync::Mutex;
 
+use tauri::Manager;
+
 mod bestiary;
 mod commands;
 mod statblock;
@@ -7,6 +9,7 @@ mod statblock;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_log::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
@@ -26,7 +29,10 @@ pub fn run() {
             commands::remove_condition,
             commands::update_notes,
         ])
-        .manage(Mutex::new(commands::AppState::new()))
+        .setup(|app| {
+            app.manage(Mutex::new(commands::AppState::new(app.handle())));
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

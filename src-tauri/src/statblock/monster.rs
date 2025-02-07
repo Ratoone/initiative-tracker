@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+
+use super::Ability;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Monster {
@@ -16,9 +18,10 @@ pub struct Monster {
     pub languages: Vec<String>,
     pub language_detail: String,
     pub speed: Speeds,
+    pub abilities: Vec<Ability>,
 }
 
-#[derive(Debug, Clone, Serialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Defenses {
     pub ac: i64,
     pub ac_detail: String,

@@ -1,14 +1,14 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::statblock::{Defenses, Monster};
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 enum Type {
     MONSTER(String),
     PLAYER,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Condition {
     pub variant: String,
     pub value: Option<i64>,
@@ -30,7 +30,7 @@ pub const CONDITIONS_WITHOUT_VALUE: &[&str] = &[
     "Quickened",
     "Restrained",
     "Unconscious",
-    ];
+];
 
 pub const CONDITIONS_WITH_VALUE: &[&str] = &[
     "Clumsy",
@@ -43,10 +43,10 @@ pub const CONDITIONS_WITH_VALUE: &[&str] = &[
     "Slowed",
     "Stunned",
     "Stupefied",
-    "Wounded"
+    "Wounded",
 ];
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Participant {
     pub id: String,
     kind: Type,

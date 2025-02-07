@@ -13,6 +13,7 @@
     "core:default",
     "opener:default",
     "log:default",
-    "core:event:allow-listen"
+    "core:event:allow-listen",
+    "fs:default"
   ]
 }

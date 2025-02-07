@@ -2,19 +2,22 @@ use std::sync::Mutex;
 
 use tauri::{AppHandle, Emitter, Manager};
 
-use crate::{bestiary::{Bestiary, Condition, Participant, CONDITIONS_WITHOUT_VALUE, CONDITIONS_WITH_VALUE}, statblock::Monster};
+use crate::{
+    bestiary::{load, save, Bestiary, Condition, Participant, CONDITIONS_WITHOUT_VALUE, CONDITIONS_WITH_VALUE},
+    statblock::Monster,
+};
 
 const PLAYER_VIEW: &str = "player_view";
 pub struct AppState {
-  bestiary: Bestiary,
-  tracker: Vec<Participant>,
+    bestiary: Bestiary,
+    tracker: Vec<Participant>,
 }
 
 impl AppState {
-    pub fn new() -> Self {
-        AppState { 
+    pub fn new(app: &AppHandle) -> Self {
+        AppState {
             bestiary: Bestiary::new("../data/packs"),
-            tracker: vec![],
+            tracker: load(&app.path().app_data_dir().unwrap()).first().unwrap().encounters.first().unwrap().participants.clone(),
         }
     }
 }
@@ -74,13 +77,22 @@ pub async fn open_player_view(handle: AppHandle) {
 }
 
 #[tauri::command]
-pub fn add_to_tracker(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, monster_name: &str, id: &str) {
+pub fn add_to_tracker(
+    app: AppHandle,
+    state: tauri::State<'_, Mutex<AppState>>,
+    monster_name: &str,
+    id: &str,
+) {
     let mut app_state = state.lock().unwrap();
-    let monster: Monster = app_state.bestiary.find_by_name(monster_name).unwrap().clone();
+    let monster: Monster = app_state
+        .bestiary
+        .find_by_name(monster_name)
+        .unwrap()
+        .clone();
     let mut participant: Participant = monster.into();
     participant.id = id.to_string();
     app_state.tracker.push(participant);
-    app.emit("tracker_updated", "").unwrap();
+    update_tracker(&app, &app_state.tracker);
 }
 
 #[tauri::command]
@@ -93,8 +105,8 @@ pub fn get_tracker(state: tauri::State<'_, Mutex<AppState>>) -> Vec<Participant>
 pub fn remove_from_tracker(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str) {
     let mut app_state = state.lock().unwrap();
     app_state.tracker.retain(|participant| participant.id != id);
-    app.emit("tracker_updated", "").unwrap();
-} 
+    update_tracker(&app, &app_state.tracker);
+}
 
 #[tauri::command]
 pub fn update_hp(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str, value: i64) {
@@ -102,45 +114,65 @@ pub fn update_hp(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &
     let mut participant = app_state.tracker.iter_mut().find(|m| m.id == id);
     if let Some(ref mut target) = participant {
         target.hp = value;
-        app.emit("tracker_updated", "").unwrap();
+        update_tracker(&app, &app_state.tracker);
     }
-} 
+}
 
 #[tauri::command]
-pub fn update_name(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str, value: &str) {
+pub fn update_name(
+    app: AppHandle,
+    state: tauri::State<'_, Mutex<AppState>>,
+    id: &str,
+    value: &str,
+) {
     let mut app_state = state.lock().unwrap();
     let mut participant = app_state.tracker.iter_mut().find(|m| m.id == id);
     if let Some(ref mut target) = participant {
         target.name = value.to_string();
-        app.emit("tracker_updated", "").unwrap();
+        update_tracker(&app, &app_state.tracker);
     }
-} 
+}
 
 #[tauri::command]
 pub fn add_player(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str) {
     let mut app_state = state.lock().unwrap();
     let participant: Participant = Participant::new(id);
     app_state.tracker.push(participant);
-    app.emit("tracker_updated", "").unwrap();
+    update_tracker(&app, &app_state.tracker);
 }
 
 #[tauri::command]
-pub fn update_initiative(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str, value: i64) {
+pub fn update_initiative(
+    app: AppHandle,
+    state: tauri::State<'_, Mutex<AppState>>,
+    id: &str,
+    value: i64,
+) {
     let mut app_state = state.lock().unwrap();
     let mut participant = app_state.tracker.iter_mut().find(|m| m.id == id);
     if let Some(ref mut target) = participant {
         target.initiative = value;
-        app_state.tracker.sort_by(|m1, m2| m2.initiative.cmp(&m1.initiative));
-        app.emit("tracker_updated", "").unwrap();
+        app_state
+            .tracker
+            .sort_by(|m1, m2| m2.initiative.cmp(&m1.initiative));
+        update_tracker(&app, &app_state.tracker);
     }
-} 
+}
 
 #[tauri::command]
-pub fn add_condition(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str, name: &str) {
+pub fn add_condition(
+    app: AppHandle,
+    state: tauri::State<'_, Mutex<AppState>>,
+    id: &str,
+    name: &str,
+) {
     let mut app_state = state.lock().unwrap();
     let participant = app_state.tracker.iter_mut().find(|m| m.id == id);
     if let Some(target) = participant {
-        let existing_condition = target.conditions.iter_mut().find(|condition| condition.variant == name);
+        let existing_condition = target
+            .conditions
+            .iter_mut()
+            .find(|condition| condition.variant == name);
         match existing_condition {
             None => {
                 if CONDITIONS_WITH_VALUE.contains(&name) {
@@ -157,51 +189,73 @@ pub fn add_condition(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, i
                     println!("Error, no valid condition");
                     return;
                 }
-            },
+            }
             Some(condition) => {
                 if let Some(value) = &mut condition.value {
                     *value += 1;
                 }
-            },
+            }
         };
-        app.emit("tracker_updated", "").unwrap();
+        update_tracker(&app, &app_state.tracker);
     }
 }
 
 #[tauri::command]
-pub fn remove_condition(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str, name: &str) {
+pub fn remove_condition(
+    app: AppHandle,
+    state: tauri::State<'_, Mutex<AppState>>,
+    id: &str,
+    name: &str,
+) {
     let mut app_state = state.lock().unwrap();
     let participant = app_state.tracker.iter_mut().find(|m| m.id == id);
     if let Some(target) = participant {
-        let existing_condition = target.conditions.iter_mut().find(|condition| condition.variant == name);
+        let existing_condition = target
+            .conditions
+            .iter_mut()
+            .find(|condition| condition.variant == name);
         match existing_condition {
             Some(condition) => {
                 if let Some(value) = &mut condition.value {
                     *value -= 1;
                     if *value > 0 {
-                        app.emit("tracker_updated", "").unwrap();
+                        update_tracker(&app, &app_state.tracker);
                         return;
                     }
                 }
-                let index = target.conditions.iter().position(|x| x.variant == name).unwrap();
+                let index = target
+                    .conditions
+                    .iter()
+                    .position(|x| x.variant == name)
+                    .unwrap();
                 target.conditions.remove(index);
             }
             None => {
                 println!("Error, no valid condition");
                 return;
-            },
+            }
         }
 
-        app.emit("tracker_updated", "").unwrap();
+        update_tracker(&app, &app_state.tracker);
     }
 }
 
 #[tauri::command]
-pub fn update_notes(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str, value: &str) {
+pub fn update_notes(
+    app: AppHandle,
+    state: tauri::State<'_, Mutex<AppState>>,
+    id: &str,
+    value: &str,
+) {
     let mut app_state = state.lock().unwrap();
     let mut participant = app_state.tracker.iter_mut().find(|m| m.id == id);
     if let Some(ref mut target) = participant {
         target.notes = value.to_string();
-        app.emit("tracker_updated", "").unwrap();
+        update_tracker(&app, &app_state.tracker);
     }
-} 
+}
+
+fn update_tracker(app: &AppHandle, participants: &Vec<Participant>) {
+    app.emit("tracker_updated", "").unwrap();
+    save(&app.path().app_data_dir().unwrap(), participants);
+}
