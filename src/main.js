@@ -70,6 +70,7 @@ function onAddToTrackerClick(item) {
 
 function loadCombatants(combatants) {
     const tracker = document.getElementById("encounter-tracker");
+    tracker.innerHTML = "";
     combatants.participants.forEach(async combatant => {
         let item;
         if (combatant.kind.MONSTER !== undefined) {
@@ -168,6 +169,7 @@ function createTrackerParticipant(combatant, item) {
 
     let initiative = monster.getElementsByClassName("editable-init")[0];
     initiative.onblur = () => {
+        console.log("Blurred!")
         let value = parseInt(initiative.innerText.replace(/[^0-9\+\-]/, ""));
         initiative.innerText = value;
         if (value !== NaN) {
@@ -266,4 +268,9 @@ $("#add-player").on("click", () => {
     const participant = createTrackerParticipant(combatant);
     tracker.appendChild(participant);
     invoke("add_player", {id: participant.id}).then(() => {});
+});
+
+$("#reset-initiative").on("click", () => {
+    invoke("reset_initiative").then(() => {});
+    reload();
 });

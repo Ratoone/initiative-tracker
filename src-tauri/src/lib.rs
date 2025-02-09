@@ -30,6 +30,7 @@ pub fn run() {
             commands::remove_condition,
             commands::update_notes,
             commands::update_current,
+            commands::reset_initiative,
         ])
         .setup(|app| {
             app.manage(Mutex::new(commands::AppState::new(app.handle())));

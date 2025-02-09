@@ -277,6 +277,16 @@ pub fn update_current(
     update_tracker(&app, &app_state.tracker);
 }
 
+#[tauri::command]
+pub fn reset_initiative(
+    app: AppHandle,
+    state: tauri::State<'_, Mutex<AppState>>,
+) {
+    let mut app_state = state.lock().unwrap();
+    app_state.tracker.reset_initiative();
+    update_tracker(&app, &app_state.tracker);
+}
+
 fn update_tracker(app: &AppHandle, encounter: &Encounter) {
     app.emit("tracker_updated", "").unwrap();
     save(&app.path().app_data_dir().unwrap(), encounter);

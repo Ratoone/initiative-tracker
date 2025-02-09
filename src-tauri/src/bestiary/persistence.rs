@@ -49,6 +49,10 @@ impl Encounter {
         self.participants.push(participant);
     }
 
+    pub fn reset_initiative(&mut self) {
+        self.participants.iter_mut().for_each(|p| p.initiative = 0);
+    }
+
     fn default() -> Self {
         Encounter {
             name: String::from("default"),
