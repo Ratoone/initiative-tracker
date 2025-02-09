@@ -34,6 +34,7 @@ function loadCombatants(encounter) {
         let health = combatant.insertCell();
         health.style.backgroundColor = mapHealthColor(item.hp / item.max_hp);
         health.innerHTML = mapHealthPercent(item.hp / item.max_hp);
+        health.style.color = "#363636";
         
         let conditions = combatant.insertCell();
         item.conditions.forEach(existingCondition => {
@@ -48,7 +49,11 @@ function loadCombatants(encounter) {
 function mapHealthColor(percent) {
     const color1 = "#cd0000";
     const color2 = "#7ae47a";
-
+    
+    if (isNaN(percent)) {
+        return "#808080";
+    }
+    
     const r1 = parseInt(color1.substring(1, 3), 16);
     const g1 = parseInt(color1.substring(3, 5), 16);
     const b1 = parseInt(color1.substring(5, 7), 16);
@@ -67,6 +72,10 @@ function mapHealthColor(percent) {
 }
 
 function mapHealthPercent(percent) {
+    if (isNaN(percent)) {
+        return "UNKNOWN";
+    }
+
     if (percent >= 1) {
         return "UNHARMED";
     }

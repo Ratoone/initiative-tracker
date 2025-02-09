@@ -37,7 +37,7 @@ impl Encounter {
     pub fn remove_combatant(&mut self, id: &str) {
         self.participants.retain(|participant| participant.id != id);
         if id == self.current {
-            self.current = self.participants.first().map(|p| p.id.clone()).get_or_insert_default().to_string();
+            self.current = self.participants.first().map_or(String::default(), |p| p.id.clone());
         }
     }
 
