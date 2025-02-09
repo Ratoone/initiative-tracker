@@ -15,12 +15,16 @@ listen("tracker_updated", (_) => {
     });
 });
 
-function loadCombatants(items) {
-    console.log(items);
+function loadCombatants(encounter) {
     const table = document.getElementById("combatants").getElementsByTagName("tbody")[0];
     table.innerHTML = "";
-    items.forEach(item => {
+    encounter.participants.forEach(item => {
         const combatant = table.insertRow();
+
+        if (encounter.current == item.id) {
+            combatant.classList.add("current-combatant");
+        }
+
         let initiative = combatant.insertCell();
         initiative.innerHTML = item.initiative;
 
@@ -29,12 +33,8 @@ function loadCombatants(items) {
 
         let health = combatant.insertCell();
         health.style.backgroundColor = mapHealthColor(item.hp / item.max_hp);
-        if (item.kind.MONSTER !== undefined) {
-            health.innerHTML = mapHealthPercent(item.hp / item.max_hp);
-        } else {
-            health.innerHTML = `${item.hp}/${item.max_hp}`;
-        }
-
+        health.innerHTML = mapHealthPercent(item.hp / item.max_hp);
+        
         let conditions = combatant.insertCell();
         item.conditions.forEach(existingCondition => {
             conditions.appendChild(mapper.createCondition(undefined, existingCondition.variant, existingCondition.value));

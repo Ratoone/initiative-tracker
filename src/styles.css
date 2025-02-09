@@ -132,6 +132,10 @@
     font-size: 12px;
 }
 
+.current-combatant {
+    background-color: #756060;
+}
+
 h1 {
     text-align: center;
 }

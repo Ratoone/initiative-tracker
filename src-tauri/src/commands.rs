@@ -3,21 +3,21 @@ use std::sync::Mutex;
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::{
-    bestiary::{load, save, Bestiary, Condition, Participant, CONDITIONS_WITHOUT_VALUE, CONDITIONS_WITH_VALUE},
+    bestiary::{load, save, Bestiary, Condition, Encounter, Participant, CONDITIONS_WITHOUT_VALUE, CONDITIONS_WITH_VALUE},
     statblock::Monster,
 };
 
 const PLAYER_VIEW: &str = "player_view";
 pub struct AppState {
     bestiary: Bestiary,
-    tracker: Vec<Participant>,
+    tracker: Encounter,
 }
 
 impl AppState {
     pub fn new(app: &AppHandle) -> Self {
         AppState {
             bestiary: Bestiary::new("../data/packs"),
-            tracker: load(&app.path().app_data_dir().unwrap()).first().unwrap().encounters.first().unwrap().participants.clone(),
+            tracker: load(&app.path().app_data_dir().unwrap()).first().unwrap().encounters.first().unwrap().clone(),
         }
     }
 }
@@ -91,12 +91,12 @@ pub fn add_to_tracker(
         .clone();
     let mut participant: Participant = monster.into();
     participant.id = id.to_string();
-    app_state.tracker.push(participant);
+    app_state.tracker.add_combatant(participant);
     update_tracker(&app, &app_state.tracker);
 }
 
 #[tauri::command]
-pub fn get_tracker(state: tauri::State<'_, Mutex<AppState>>) -> Vec<Participant> {
+pub fn get_tracker(state: tauri::State<'_, Mutex<AppState>>) -> Encounter {
     let app_state = state.lock().unwrap();
     app_state.tracker.clone()
 }
@@ -104,16 +104,26 @@ pub fn get_tracker(state: tauri::State<'_, Mutex<AppState>>) -> Vec<Participant>
 #[tauri::command]
 pub fn remove_from_tracker(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str) {
     let mut app_state = state.lock().unwrap();
-    app_state.tracker.retain(|participant| participant.id != id);
+    app_state.tracker.remove_combatant(id);
     update_tracker(&app, &app_state.tracker);
 }
 
 #[tauri::command]
 pub fn update_hp(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str, value: i64) {
     let mut app_state = state.lock().unwrap();
-    let mut participant = app_state.tracker.iter_mut().find(|m| m.id == id);
+    let mut participant = app_state.tracker.find_by_id(id);
     if let Some(ref mut target) = participant {
         target.hp = value;
+        update_tracker(&app, &app_state.tracker);
+    }
+}
+
+#[tauri::command]
+pub fn update_max_hp(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str, value: i64) {
+    let mut app_state = state.lock().unwrap();
+    let mut participant = app_state.tracker.find_by_id(id);
+    if let Some(ref mut target) = participant {
+        target.max_hp = value;
         update_tracker(&app, &app_state.tracker);
     }
 }
@@ -126,7 +136,7 @@ pub fn update_name(
     value: &str,
 ) {
     let mut app_state = state.lock().unwrap();
-    let mut participant = app_state.tracker.iter_mut().find(|m| m.id == id);
+    let mut participant = app_state.tracker.find_by_id(id);
     if let Some(ref mut target) = participant {
         target.name = value.to_string();
         update_tracker(&app, &app_state.tracker);
@@ -137,7 +147,7 @@ pub fn update_name(
 pub fn add_player(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str) {
     let mut app_state = state.lock().unwrap();
     let participant: Participant = Participant::new(id);
-    app_state.tracker.push(participant);
+    app_state.tracker.add_combatant(participant);
     update_tracker(&app, &app_state.tracker);
 }
 
@@ -149,11 +159,12 @@ pub fn update_initiative(
     value: i64,
 ) {
     let mut app_state = state.lock().unwrap();
-    let mut participant = app_state.tracker.iter_mut().find(|m| m.id == id);
+    let mut participant = app_state.tracker.find_by_id(id);
     if let Some(ref mut target) = participant {
         target.initiative = value;
         app_state
             .tracker
+            .participants
             .sort_by(|m1, m2| m2.initiative.cmp(&m1.initiative));
         update_tracker(&app, &app_state.tracker);
     }
@@ -167,7 +178,7 @@ pub fn add_condition(
     name: &str,
 ) {
     let mut app_state = state.lock().unwrap();
-    let participant = app_state.tracker.iter_mut().find(|m| m.id == id);
+    let participant = app_state.tracker.find_by_id(id);
     if let Some(target) = participant {
         let existing_condition = target
             .conditions
@@ -208,7 +219,7 @@ pub fn remove_condition(
     name: &str,
 ) {
     let mut app_state = state.lock().unwrap();
-    let participant = app_state.tracker.iter_mut().find(|m| m.id == id);
+    let participant = app_state.tracker.find_by_id(id);
     if let Some(target) = participant {
         let existing_condition = target
             .conditions
@@ -248,14 +259,25 @@ pub fn update_notes(
     value: &str,
 ) {
     let mut app_state = state.lock().unwrap();
-    let mut participant = app_state.tracker.iter_mut().find(|m| m.id == id);
+    let mut participant = app_state.tracker.find_by_id(id);
     if let Some(ref mut target) = participant {
         target.notes = value.to_string();
         update_tracker(&app, &app_state.tracker);
     }
 }
 
-fn update_tracker(app: &AppHandle, participants: &Vec<Participant>) {
+#[tauri::command]
+pub fn update_current(
+    app: AppHandle,
+    state: tauri::State<'_, Mutex<AppState>>,
+    id: &str,
+) {
+    let mut app_state = state.lock().unwrap();
+    app_state.tracker.current = id.to_string();
+    update_tracker(&app, &app_state.tracker);
+}
+
+fn update_tracker(app: &AppHandle, encounter: &Encounter) {
     app.emit("tracker_updated", "").unwrap();
-    save(&app.path().app_data_dir().unwrap(), participants);
+    save(&app.path().app_data_dir().unwrap(), encounter);
 }

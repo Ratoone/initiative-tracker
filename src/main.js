@@ -70,13 +70,16 @@ function onAddToTrackerClick(item) {
 
 function loadCombatants(combatants) {
     const tracker = document.getElementById("encounter-tracker");
-    combatants.forEach(async combatant => {
+    combatants.participants.forEach(async combatant => {
         let item;
         if (combatant.kind.MONSTER !== undefined) {
             item = await invoke("get_by_name", {name: combatant.kind.MONSTER});
         }
         const participant = createTrackerParticipant(combatant, item);
         tracker.appendChild(participant);
+        if (combatants.current === combatant.id) {
+            participant.classList.add("current-combatant")
+        }
     });
 }
 
@@ -91,7 +94,12 @@ function createTrackerParticipant(combatant, item) {
                 <div class="level">${combatant.lvl ?? ""}</div>
                 <div class="editable-name" contenteditable="true">${combatant.name}</div>
             </div>
-            <div class="health-bar"><i class="fa fa-heart"></i> <span class="editable-hp" contenteditable="true">${combatant.hp ?? 0}</span>/${combatant.max_hp ?? 0}</div>
+            <div class="health-bar">
+                <i class="fa fa-heart"></i> 
+                <span class="editable-hp" contenteditable="true">${combatant.hp ?? 0}</span>
+                /
+                <span class="editable-max-hp" contenteditable="true">${combatant.max_hp ?? 0}</span>
+            </div>
             <div class="side-by-side">
                 <div class="dropdown">
                     <button class="dropbtn">Add Condition</button>
@@ -138,6 +146,15 @@ function createTrackerParticipant(combatant, item) {
             invoke("update_hp", {id: monster.id, value: value}).then(() =>{});
         }
     }
+    
+    let maxHp = monster.getElementsByClassName("editable-max-hp")[0];
+    maxHp.onblur = () => {
+        let value = parseInt(eval(maxHp.innerText.replace(/[^0-9\+\-]/, "")));
+        maxHp.innerText = value;
+        if (value !== NaN) {
+            invoke("update_max_hp", {id: monster.id, value: value}).then(() =>{});
+        }
+    }
 
     let name = monster.getElementsByClassName("editable-name")[0];
     name.onblur = () => {
@@ -177,6 +194,12 @@ function createTrackerParticipant(combatant, item) {
         conditionDropdown.appendChild(conditionChoice);
         return `<a>${condition}</a>`
     });
+
+    monster.onclick = () => {
+        document.getElementsByClassName("current-combatant")[0]?.classList.remove("current-combatant");
+        monster.classList.add("current-combatant");
+        invoke("update_current", {id: monster.id}).then(() => {});
+    }
 
     return monster;
 }

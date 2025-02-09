@@ -22,12 +22,14 @@ pub fn run() {
             commands::get_tracker,
             commands::remove_from_tracker,
             commands::update_hp,
+            commands::update_max_hp,
             commands::update_name,
             commands::add_player,
             commands::update_initiative,
             commands::add_condition,
             commands::remove_condition,
             commands::update_notes,
+            commands::update_current,
         ])
         .setup(|app| {
             app.manage(Mutex::new(commands::AppState::new(app.handle())));
