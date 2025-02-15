@@ -4,8 +4,64 @@ import * as mapper from "./mapper.js";
 const { invoke } = window.__TAURI__.core;
 
 invoke("get_all").then(data => {
-    loadTableData(data)
+    loadTableData(data);
 });
+
+invoke("get_campaigns").then(data => {
+    const campaignSelect = document.getElementById("campaign-select");
+    data.campaigns.forEach(campaign => {
+        var opt = document.createElement("option");
+        opt.value = campaign.id;
+        opt.innerText = campaign.name;
+        campaignSelect.appendChild(opt);
+        
+        if (campaign.id === data.current) {
+            opt.selected = true;
+            showEncounters(campaign);
+        }
+    });
+
+    campaignSelect.onchange = e => {
+        if (e.target.value === "New Campaign") {
+            invoke("create_campaign").then(campaign => {
+                var opt = document.createElement("option");
+                opt.value = campaign.id;
+                opt.innerText = campaign.name;
+                campaignSelect.appendChild(opt);
+                campaignSelect.value = campaign.id;
+                showEncounters(campaign);
+                reload();
+            });
+            return;
+        }
+
+        console.log(e.target)
+        const selectedCampaign = data.campaigns.filter(c => c.id === e.target.value)[0];
+        invoke("set_current_campaign", {id: selectedCampaign.id}).then(() => {
+            showEncounters(selectedCampaign);
+            reload();
+        });
+    };
+
+});
+
+function showEncounters(campaign) {
+    const encounters = document.getElementById("encounter-list");
+    encounters.innerHTML = "";
+    campaign.encounters.forEach(encounter => {
+        const chip = document.createElement("div");
+        chip.classList.add("encounter-chip");
+        chip.innerHTML = `${encounter.name} <i class="fa fa-pen"></i>`;
+        chip.getElementsByTagName("i")[0].onclick = () => {
+            console.log(encounter.name);
+        };
+        if (campaign.current === encounter.id) {
+            chip.classList.add("current-combatant")
+        }
+
+        encounters.appendChild(chip);
+    });
+}
 
 reload();
 
@@ -71,12 +127,13 @@ function onAddToTrackerClick(item) {
 function loadCombatants(combatants) {
     const tracker = document.getElementById("encounter-tracker");
     tracker.innerHTML = "";
-    combatants.participants.forEach(async combatant => {
-        let item;
+    combatants.participants.forEach(combatant => {
         if (combatant.kind.MONSTER !== undefined) {
-            item = await invoke("get_by_name", {name: combatant.kind.MONSTER});
+            invoke("get_by_name", {name: combatant.kind.MONSTER}).then(item => {
+                document.getElementById(combatant.id).getElementsByClassName("view-statblock")[0].onclick = () => displayStatblock(item);
+            });
         }
-        const participant = createTrackerParticipant(combatant, item);
+        const participant = createTrackerParticipant(combatant);
         tracker.appendChild(participant);
         if (combatants.current === combatant.id) {
             participant.classList.add("current-combatant")
@@ -106,7 +163,7 @@ function createTrackerParticipant(combatant, item) {
                     <button class="dropbtn">Add Condition</button>
                     <div class="dropdown-content"></div>
                 </div>
-                ${item === undefined ? "" : "<button class='view-statblock'>Statblock</button>"}
+                ${item === undefined && combatant.kind?.MONSTER === undefined ? "" : "<button class='view-statblock'>Statblock</button>"}
                 <i class="fa fa-trash"></i>
             </div>
             <div class="participant-conditions"></div>
@@ -198,7 +255,7 @@ function createTrackerParticipant(combatant, item) {
     });
 
     monster.onclick = () => {
-        document.getElementsByClassName("current-combatant")[0]?.classList.remove("current-combatant");
+        document.getElementsByClassName("current-combatant tracker-participant")[0]?.classList.remove("current-combatant");
         monster.classList.add("current-combatant");
         invoke("update_current", {id: monster.id}).then(() => {});
     }

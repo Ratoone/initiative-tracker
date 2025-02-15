@@ -1,26 +1,57 @@
 use std::{fs, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 use super::Participant;
 
 #[derive(Serialize, Deserialize, Clone)]
+pub struct TrackerData {
+    pub current: String,
+    pub campaigns: Vec<Campaign>,
+}
+
+impl TrackerData {
+    fn default() -> Self {
+        let campaign = Campaign::default();
+        TrackerData {
+            current: campaign.id.clone(),
+            campaigns: vec![campaign],
+        }
+    }
+
+    pub fn get_current_campaign(&mut self) -> &mut Campaign {
+        self.campaigns.iter_mut().find(|campaign| campaign.id == self.current).unwrap()
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Campaign {
+    pub id: String,
+    current: String,
     name: String,
     pub encounters: Vec<Encounter>,
 }
 
 impl Campaign {
-    fn default() -> Self {
+    pub fn default() -> Self {
+        let encounter = Encounter::default();
         Campaign {
+            id: Uuid::new_v4().to_string(),
+            current: encounter.id.clone(),
             name: String::from("default"),
-            encounters: vec![Encounter::default()],
+            encounters: vec![encounter],
         }
+    }
+
+    pub fn get_current_encounter(&mut self) -> &mut Encounter {
+        self.encounters.iter_mut().find(|encounter| encounter.id == self.current).unwrap()
     }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Encounter {
+    id: String,
     name: String,
     pub participants: Vec<Participant>,
     #[serde(default)]
@@ -55,6 +86,7 @@ impl Encounter {
 
     fn default() -> Self {
         Encounter {
+            id: Uuid::new_v4().to_string(),
             name: String::from("default"),
             participants: vec![],
             round: 1,
@@ -63,22 +95,18 @@ impl Encounter {
     }
 }
 
-pub fn save(path: &PathBuf, encounter: &Encounter) {
+pub fn save(path: &PathBuf, data: &TrackerData) {
     if !path.exists() {
         fs::create_dir(&path).unwrap();
     }
     let data_file = path.join("data.json");
-    let campaigns = vec![Campaign {
-        name: "default".to_string(),
-        encounters: vec![encounter.clone()]
-    }];
-    fs::write(&data_file, serde_json::to_string(&campaigns).unwrap()).unwrap();
+    fs::write(&data_file, serde_json::to_string_pretty(data).unwrap()).unwrap();
 }
 
-pub fn load(path: &PathBuf) -> Vec<Campaign> {
+pub fn load(path: &PathBuf) -> TrackerData {
     let data_file = path.join("data.json");
     if !fs::exists(&data_file).unwrap() {
-        return vec![Campaign::default()];
+        return TrackerData::default();
     }
 
     serde_json::from_str(&fs::read_to_string(data_file).unwrap()).unwrap()

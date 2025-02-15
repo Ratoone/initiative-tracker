@@ -74,6 +74,14 @@
     margin: 2.5px 0;
 }
 
+.encounter-chip {
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    margin: 0.1em 0;
+    padding: 0 5px;
+}
+
 .trait-chip {
     background-color: #531004;
     border-color: #d5c489;
