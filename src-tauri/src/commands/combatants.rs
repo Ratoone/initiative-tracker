@@ -2,68 +2,12 @@ use std::sync::Mutex;
 
 use tauri::{AppHandle, Emitter, Manager};
 
-use crate::{
-    bestiary::{load, save, Bestiary, Campaign, Condition, Encounter, Participant, TrackerData, CONDITIONS_WITHOUT_VALUE, CONDITIONS_WITH_VALUE},
-    statblock::Monster,
-};
+use crate::{statblock::{Condition, Participant, CONDITIONS_WITHOUT_VALUE, CONDITIONS_WITH_VALUE}, statblock::Monster, tracker::{save, Encounter, TrackerData}};
+
+use super::AppState;
+
 
 const PLAYER_VIEW: &str = "player_view";
-pub struct AppState {
-    bestiary: Bestiary,
-    tracker_data: TrackerData,
-}
-
-impl AppState {
-    pub fn new(app: &AppHandle) -> Self {
-        let data = load(&app.path().app_data_dir().unwrap());
-        AppState {
-            bestiary: Bestiary::new("../data/packs"),
-            tracker_data: data,
-        }
-    }
-
-    fn get_current_encounter(&mut self) -> &mut Encounter {
-        self.tracker_data.get_current_campaign().get_current_encounter()
-    } 
-}
-
-#[tauri::command(async)]
-pub fn get_all(state: tauri::State<'_, Mutex<AppState>>) -> Vec<Monster> {
-    let cache = &state.lock().unwrap().bestiary;
-    let mut monsters: Vec<Monster> = cache.monsters.clone();
-    monsters.sort_by(|m1, m2| m1.name.cmp(&m2.name));
-    monsters
-}
-
-#[tauri::command]
-pub fn find_by_name(state: tauri::State<'_, Mutex<AppState>>, name: &str) -> Vec<Monster> {
-    let cache = &state.lock().unwrap().bestiary;
-    let mut monsters: Vec<Monster> = cache.monsters.clone();
-    monsters.retain(|monster| monster.name.to_lowercase().contains(name));
-    monsters.sort_by(|m1, m2| m1.name.cmp(&m2.name));
-    monsters
-}
-
-#[tauri::command]
-pub fn get_by_name(state: tauri::State<'_, Mutex<AppState>>, name: &str) -> Option<Monster> {
-    let cache = &state.lock().unwrap().bestiary;
-    cache.find_by_name(name).cloned()
-}
-
-#[tauri::command]
-pub fn find_by_trait(state: tauri::State<'_, Mutex<AppState>>, name: &str) -> Vec<Monster> {
-    let cache = &state.lock().unwrap().bestiary;
-    let mut monsters: Vec<Monster> = cache.monsters.clone();
-    monsters.retain(|monster| {
-        monster
-            .traits
-            .rest
-            .iter()
-            .any(|monster_trait| monster_trait.contains(name))
-    });
-    monsters.sort_by(|m1, m2| m1.name.cmp(&m2.name));
-    monsters
-}
 
 #[tauri::command]
 pub async fn open_player_view(handle: AppHandle) {
@@ -97,29 +41,6 @@ pub fn add_to_tracker(
     let mut participant: Participant = monster.into();
     participant.id = id.to_string();
     app_state.get_current_encounter().add_combatant(participant);
-    update_tracker(&app, &app_state.tracker_data);
-}
-
-#[tauri::command]
-pub fn get_campaigns(state: tauri::State<'_, Mutex<AppState>>) -> TrackerData {
-    state.lock().unwrap().tracker_data.clone()
-}
-
-#[tauri::command]
-pub fn create_campaign(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>) -> Campaign {
-    let new_campaign = Campaign::default();
-    let new_id = new_campaign.id.clone();
-    let mut app_state = state.lock().unwrap();
-    app_state.tracker_data.campaigns.push(new_campaign.clone());
-    app_state.tracker_data.current = new_id;
-    update_tracker(&app, &app_state.tracker_data);
-    new_campaign
-}
-
-#[tauri::command]
-pub fn set_current_campaign(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str) {
-    let mut app_state = state.lock().unwrap();
-    app_state.tracker_data.current = id.to_string();
     update_tracker(&app, &app_state.tracker_data);
 }
 
@@ -315,7 +236,7 @@ pub fn reset_initiative(
     update_tracker(&app, &app_state.tracker_data);
 }
 
-fn update_tracker(app: &AppHandle, data: &TrackerData) {
+pub fn update_tracker(app: &AppHandle, data: &TrackerData) {
     app.emit("tracker_updated", "").unwrap();
     save(&app.path().app_data_dir().unwrap(), data);
 }

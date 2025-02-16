@@ -5,6 +5,7 @@ use tauri::Manager;
 mod bestiary;
 mod commands;
 mod statblock;
+mod tracker;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
