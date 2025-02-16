@@ -254,7 +254,7 @@ function createTrackerParticipant(combatant, item) {
         return `<a>${condition}</a>`
     });
 
-    monster.onclick = () => {
+    monster.ondblclick = () => {
         document.getElementsByClassName("current-combatant tracker-participant")[0]?.classList.remove("current-combatant");
         monster.classList.add("current-combatant");
         invoke("update_current", {id: monster.id}).then(() => {});
