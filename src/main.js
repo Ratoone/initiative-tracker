@@ -61,6 +61,11 @@ function showEncounters(campaign) {
 
         encounters.appendChild(chip);
     });
+    
+    const plusChip = document.createElement("div");
+    plusChip.classList.add("encounter-chip");
+    plusChip.innerText = "+";
+    encounters.appendChild(plusChip);
 }
 
 reload();
