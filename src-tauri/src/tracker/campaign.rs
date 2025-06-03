@@ -27,7 +27,7 @@ impl TrackerData {
 pub struct Campaign {
     pub id: String,
     current: String,
-    name: String,
+    pub name: String,
     pub encounters: Vec<Encounter>,
 }
 

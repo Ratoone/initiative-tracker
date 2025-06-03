@@ -7,43 +7,57 @@ invoke("get_all").then(data => {
     loadTableData(data);
 });
 
-invoke("get_campaigns").then(data => {
-    const campaignSelect = document.getElementById("campaign-select");
-    data.campaigns.forEach(campaign => {
-        var opt = document.createElement("option");
-        opt.value = campaign.id;
-        opt.innerText = campaign.name;
-        campaignSelect.appendChild(opt);
-        
-        if (campaign.id === data.current) {
-            opt.selected = true;
-            showEncounters(campaign);
-        }
-    });
-
-    campaignSelect.onchange = e => {
-        if (e.target.value === "New Campaign") {
-            invoke("create_campaign").then(campaign => {
-                var opt = document.createElement("option");
-                opt.value = campaign.id;
-                opt.innerText = campaign.name;
-                campaignSelect.appendChild(opt);
-                campaignSelect.value = campaign.id;
+function showCampaigns() {
+    invoke("get_campaigns").then(data => {
+        const campaignSelect = document.getElementById("campaign-select");
+        campaignSelect.innerHTML = "<option>New Campaign</option>";
+        data.campaigns.forEach(campaign => {
+            var opt = document.createElement("option");
+            opt.value = campaign.id;
+            opt.innerText = campaign.name;
+            campaignSelect.appendChild(opt);
+            
+            if (campaign.id === data.current) {
+                opt.selected = true;
                 showEncounters(campaign);
-                reload();
-            });
-            return;
-        }
-
-        console.log(e.target)
-        const selectedCampaign = data.campaigns.filter(c => c.id === e.target.value)[0];
-        invoke("set_current_campaign", {id: selectedCampaign.id}).then(() => {
-            showEncounters(selectedCampaign);
-            reload();
+                loadCurrentCombat();
+            }
         });
-    };
 
-});
+        campaignSelect.onchange = e => {
+            if (e.target.value === "New Campaign") {
+                invoke("create_campaign").then(campaign => {
+                    data.campaigns.push(campaign);
+                    data.current = campaign.id;
+                    var opt = document.createElement("option");
+                    opt.value = campaign.id;
+                    opt.innerText = campaign.name;
+                    campaignSelect.appendChild(opt);
+                    campaignSelect.value = campaign.id;
+                    showEncounters(campaign);
+                    loadCurrentCombat();
+                });
+                return;
+            }
+
+            console.log(e.target)
+            const selectedCampaign = data.campaigns.filter(c => c.id === e.target.value)[0];
+            invoke("set_current_campaign", {id: selectedCampaign.id}).then(() => {
+                data.current = selectedCampaign.current;
+                showEncounters(selectedCampaign);
+                loadCurrentCombat();
+            });
+        };
+
+        document.getElementById("delete-campaign").onclick = e => {
+            invoke("delete_campaign", {id: data.current}).then(() => {
+                showCampaigns();
+            });
+        };
+
+    });
+}
+showCampaigns();
 
 function showEncounters(campaign) {
     const encounters = document.getElementById("encounter-list");
@@ -68,9 +82,7 @@ function showEncounters(campaign) {
     encounters.appendChild(plusChip);
 }
 
-reload();
-
-function reload() {
+function loadCurrentCombat() {
     invoke("get_tracker").then(data => {
         loadCombatants(data);
     });
@@ -237,7 +249,7 @@ function createTrackerParticipant(combatant, item) {
         if (value !== NaN) {
             invoke("update_initiative", {id: monster.id, value: value}).then(() =>{});
             document.getElementById("encounter-tracker").innerHTML = "";
-            reload();
+            loadCurrentCombat();
         }
     }
 
@@ -334,5 +346,5 @@ $("#add-player").on("click", () => {
 
 $("#reset-initiative").on("click", () => {
     invoke("reset_initiative").then(() => {});
-    reload();
+    loadCurrentCombat();
 });
