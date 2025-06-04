@@ -20,7 +20,6 @@ function showCampaigns() {
             if (campaign.id === data.current) {
                 opt.selected = true;
                 showEncounters(campaign);
-                loadCurrentCombat();
             }
         });
 
@@ -35,7 +34,6 @@ function showCampaigns() {
                     campaignSelect.appendChild(opt);
                     campaignSelect.value = campaign.id;
                     showEncounters(campaign);
-                    loadCurrentCombat();
                 });
                 return;
             }
@@ -45,14 +43,32 @@ function showCampaigns() {
             invoke("set_current_campaign", {id: selectedCampaign.id}).then(() => {
                 data.current = selectedCampaign.current;
                 showEncounters(selectedCampaign);
-                loadCurrentCombat();
             });
         };
 
-        document.getElementById("delete-campaign").onclick = e => {
+        document.getElementById("delete-campaign").onclick = _e => {
             invoke("delete_campaign", {id: data.current}).then(() => {
                 showCampaigns();
             });
+        };
+
+        const rename = document.getElementById("rename-campaign");
+        rename.onclick = _e => {
+            const newName = document.createElement("input");
+            rename.replaceWith(newName);
+            newName.focus();
+            newName.onblur = _e => {
+                invoke("rename_campaign", {id: data.current, name: newName.value}).then(() => {
+                    newName.replaceWith(rename);
+                    showCampaigns();
+                });
+            };
+            newName.onkeyup = e => {
+                switch (e.key) {
+                    case "Enter": e.currentTarget.blur();
+                    case "Escape": newName.replaceWith(rename);
+                }
+            };
         };
 
     });
@@ -80,6 +96,8 @@ function showEncounters(campaign) {
     plusChip.classList.add("encounter-chip");
     plusChip.innerText = "+";
     encounters.appendChild(plusChip);
+
+    loadCurrentCombat();
 }
 
 function loadCurrentCombat() {
