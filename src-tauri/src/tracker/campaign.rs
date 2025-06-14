@@ -26,7 +26,7 @@ impl TrackerData {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Campaign {
     pub id: String,
-    current: String,
+    pub current: String,
     pub name: String,
     pub encounters: Vec<Encounter>,
 }
@@ -49,8 +49,8 @@ impl Campaign {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Encounter {
-    id: String,
-    name: String,
+    pub id: String,
+    pub name: String,
     pub participants: Vec<Participant>,
     #[serde(default)]
     pub round: i64,
@@ -82,7 +82,7 @@ impl Encounter {
         self.participants.iter_mut().for_each(|p| p.initiative = 0);
     }
 
-    fn default() -> Self {
+    pub fn default() -> Self {
         Encounter {
             id: Uuid::new_v4().to_string(),
             name: String::from("default"),

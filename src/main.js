@@ -2,6 +2,7 @@ import * as mapper from "./mapper.js";
 
 "use strict";
 const { invoke } = window.__TAURI__.core;
+const { info } = window.__TAURI__.log;
 
 invoke("get_all").then(data => {
     loadTableData(data);
@@ -80,14 +81,43 @@ function showEncounters(campaign) {
     encounters.innerHTML = "";
     campaign.encounters.forEach(encounter => {
         const chip = document.createElement("div");
+        chip.id = encounter.id;
         chip.classList.add("encounter-chip");
-        chip.innerHTML = `${encounter.name} <i class="fa fa-pen"></i>`;
+        chip.classList.add("side-by-side");
+        chip.innerHTML = `
+            <div class="edit-encounter" contenteditable="true">${encounter.name}</div> 
+            <i class="fa fa-trash"></i>
+        `;
         chip.getElementsByTagName("i")[0].onclick = () => {
-            console.log(encounter.name);
+            invoke("delete_encounter", {id: encounter.id}).then(() => {
+                showCampaigns();
+            });
         };
         if (campaign.current === encounter.id) {
-            chip.classList.add("current-combatant")
+            chip.classList.add("current-combatant");
         }
+
+        chip.ondblclick = _ => {
+            invoke("set_current_encounter", {id: chip.id}).then(() => {
+                encounters.getElementsByClassName("current-combatant")[0].classList.remove("current-combatant");
+                chip.classList.add("current-combatant");
+                loadCurrentCombat();
+            });
+        }
+
+        chip.getElementsByClassName("edit-encounter")[0].onblur = e => {
+            invoke("rename_encounter", {id: chip.id, name: e.target.innerText}).then(() =>{});
+        }
+        chip.getElementsByClassName("edit-encounter")[0].onkeydown = e => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                setTimeout(function() {
+                    e.target.blur();
+                }, 0);
+                return false;
+            }
+            return true;
+        };
 
         encounters.appendChild(chip);
     });
@@ -95,6 +125,13 @@ function showEncounters(campaign) {
     const plusChip = document.createElement("div");
     plusChip.classList.add("encounter-chip");
     plusChip.innerText = "+";
+    plusChip.onclick = _ => {
+        invoke("create_encounter").then(data => {
+            campaign.encounters.push(data);
+            campaign.current = data.id;
+            showEncounters(campaign);
+        });
+    }
     encounters.appendChild(plusChip);
 
     loadCurrentCombat();

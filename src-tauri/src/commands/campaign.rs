@@ -33,7 +33,9 @@ pub fn set_current_campaign(app: AppHandle, state: tauri::State<'_, Mutex<AppSta
 pub fn delete_campaign(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str) {
     let mut app_state = state.lock().unwrap();
     app_state.tracker_data.campaigns.retain(|campaign| campaign.id != id );
-    app_state.tracker_data.current = app_state.tracker_data.campaigns[0].id.clone(); 
+    if !app_state.tracker_data.campaigns.is_empty() && id == app_state.tracker_data.current {
+        app_state.tracker_data.current = app_state.tracker_data.campaigns[0].id.clone(); 
+    }
     update_tracker(&app, &app_state.tracker_data);
 }
 

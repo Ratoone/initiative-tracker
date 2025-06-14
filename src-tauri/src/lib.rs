@@ -37,6 +37,10 @@ pub fn run() {
             commands::update_notes,
             commands::update_current,
             commands::reset_initiative,
+            commands::create_encounter,
+            commands::rename_encounter,
+            commands::delete_encounter,
+            commands::set_current_encounter,
         ])
         .setup(|app| {
             app.manage(Mutex::new(commands::AppState::new(app.handle())));
