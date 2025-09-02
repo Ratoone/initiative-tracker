@@ -46,6 +46,10 @@ pub const CONDITIONS_WITH_VALUE: &[&str] = &[
     "Wounded",
 ];
 
+fn default_true() -> bool {
+    true
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Participant {
     pub id: String,
@@ -59,6 +63,8 @@ pub struct Participant {
     lvl: i64,
     defenses: Defenses,
     perception: i64,
+    #[serde(default= "default_true")]
+    pub visible: bool,
 }
 
 impl Into<Participant> for Monster {
@@ -75,6 +81,7 @@ impl Into<Participant> for Monster {
             lvl: self.lvl,
             defenses: self.defenses,
             perception: self.senses.perception,
+            visible: false
         }
     }
 }
@@ -93,6 +100,7 @@ impl Participant {
             lvl: 0,
             defenses: Defenses::default(),
             perception: 0,
+            visible: true,
         }
     }
 }

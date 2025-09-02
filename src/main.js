@@ -236,6 +236,7 @@ function createTrackerParticipant(combatant, item) {
                     <div class="dropdown-content"></div>
                 </div>
                 ${item === undefined && combatant.kind?.MONSTER === undefined ? "" : "<button class='view-statblock'>Statblock</button>"}
+                <i class="fa toggle-visible ${!!combatant.visible ? "fa-eye" : "fa-eye-slash"}"></i>
                 <i class="fa fa-trash"></i>
             </div>
             <div class="participant-conditions"></div>
@@ -255,6 +256,12 @@ function createTrackerParticipant(combatant, item) {
     }
     monster.getElementsByClassName("fa-trash")[0].onclick = () => deleteTrackerParticipant(combatant.id);
     
+    monster.getElementsByClassName("toggle-visible")[0].onclick = (event) => {
+        event.target.classList.toggle("fa-eye");
+        event.target.classList.toggle("fa-eye-slash");
+        invoke("toggle_visible", {id: monster.id}).then(() =>{});
+    };
+
     monster.querySelectorAll("[contenteditable=true]").forEach(content => {
         content.onkeydown = (e) => {
             if (e.key === "Enter") {

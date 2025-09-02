@@ -240,3 +240,17 @@ pub fn update_tracker(app: &AppHandle, data: &TrackerData) {
     app.emit("tracker_updated", "").unwrap();
     save(&app.path().app_data_dir().unwrap(), data);
 }
+
+#[tauri::command]
+pub fn toggle_visible(
+    app: AppHandle,
+    state: tauri::State<'_, Mutex<AppState>>,
+    id: &str,
+) {
+    let mut app_state = state.lock().unwrap();
+    let participant = app_state.get_current_encounter().find_by_id(id);
+    if let Some(target) = participant {
+        target.visible = !target.visible
+    }
+    update_tracker(&app, &app_state.tracker_data);
+}

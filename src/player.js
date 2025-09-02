@@ -19,6 +19,10 @@ function loadCombatants(encounter) {
     const table = document.getElementById("combatants").getElementsByTagName("tbody")[0];
     table.innerHTML = "";
     encounter.participants.forEach(item => {
+        if (!item.visible) {
+            return
+        }
+        
         const combatant = table.insertRow();
 
         if (encounter.current == item.id) {
