@@ -8,6 +8,14 @@ pub enum Type {
     PLAYER,
 }
 
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq)]
+pub enum Template {
+    WEAK = -1,
+    #[default]
+    NONE = 0,
+    ELITE = 1
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Condition {
     pub variant: String,
@@ -65,6 +73,8 @@ pub struct Participant {
     pub perception: i64,
     #[serde(default= "default_true")]
     pub visible: bool,
+    #[serde(default)]
+    pub template: Template
 }
 
 impl Into<Participant> for Monster {
@@ -81,7 +91,8 @@ impl Into<Participant> for Monster {
             lvl: self.lvl,
             defenses: self.defenses,
             perception: self.senses.perception,
-            visible: false
+            visible: false,
+            template: Template::default(),
         }
     }
 }
@@ -101,6 +112,49 @@ impl Participant {
             defenses: Defenses::default(),
             perception: 0,
             visible: true,
+            template: Template::default(),
         }
+    }
+
+    pub fn apply_template(&mut self, template: Template) {
+        if self.template == template {
+            return;
+        }
+
+        if template == Template::WEAK && self.lvl < 0 {
+            return;
+        }
+        
+        let diff: i64 = template as i64 - self.template as i64;
+        if diff.abs() > 1 {
+            self.apply_template(Template::NONE);
+            self.apply_template(template);
+            return;
+        }
+
+        self.perception += 2 * diff;
+        self.defenses.ac += 2 * diff;
+        self.defenses.fortitude += 2 * diff;
+        self.defenses.reflex += 2 * diff;
+        self.defenses.will += 2 * diff;
+
+        let old_lvl = self.lvl;
+        if self.lvl <= 0 && diff > 0 {
+            self.lvl += 2;
+        } else if self.lvl == 1 && diff < 0 {
+            self.lvl -= 2;
+        } else {
+            self.lvl += diff;
+        }
+        let hp_diff = match std::cmp::max(self.lvl, old_lvl) {
+            ..1 => 0,
+            1..=2 => 10,
+            3..=5 => 15,
+            6..=20 => 20,
+            21.. => 30,
+        };
+        self.hp += diff * hp_diff;
+        self.max_hp += diff * hp_diff;
+        self.template = template;
     }
 }

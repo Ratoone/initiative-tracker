@@ -92,7 +92,7 @@ pub fn deserialize(path: &Path) -> Option<Monster> {
         languages: system["details"]["languages"]["value"].array_value(StringValue::get_string),
         language_detail: system["details"]["languages"]["details"].get_string(),
         speed: map_speed(&attributes["speed"]),
-        abilities: parsed["items"].array_value(map_ability),
+        abilities: parsed["items"].array_value(map_ability)
     })
 }
 

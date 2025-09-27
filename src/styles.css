@@ -173,6 +173,14 @@
     background-color: #756060;
 }
 
+.number-buffed {
+    color: #478c42;
+}
+
+.number-debuffed {
+    color:#df5b43;
+}
+
 h1 {
     text-align: center;
 }

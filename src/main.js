@@ -243,13 +243,13 @@ function createTrackerParticipant(combatant, item) {
             <div class="participant-conditions"></div>
             <div class="participant-notes" contenteditable="true">${combatant.notes ?? ""}</div>
         </div>
-        <div>
+        <div class="numbers">
             <div><i class="fa fa-dumbbell"></i> +${combatant.defenses?.fortitude ?? 0}</div>
             <div><i class="fa fa-bolt"></i> +${combatant.defenses?.reflex ?? 0}</div>
             <div><i class="fa fa-brain"></i> +${combatant.defenses?.will ?? 0}</div>
             <div><i class="fa fa-eye"></i> +${combatant.perception ?? 0}</div>
         </div>
-        <div><i class="fa fa-shield"></i> ${combatant.defenses?.ac ?? 0}</div>
+        <div class="numbers"><i class="fa fa-shield"></i> ${combatant.defenses?.ac ?? 0}</div>
     `;
 
     if (item !== undefined) {
@@ -339,13 +339,27 @@ function createTrackerParticipant(combatant, item) {
         ["Elite", "Weak", "None"].forEach(template => {
             const choice = document.createElement("a");
             choice.innerText = template;
+            if (template.toUpperCase() === combatant.template) {
+                choice.classList.add("current-combatant");
+            }
             choice.onclick = () => {
+                invoke("update_template", {id: monster.id, value: template.toUpperCase()});
+                loadCurrentCombat();
             };
             
             templateDropdown.appendChild(choice);
             return `<a>${template}</a>`
         });
     }
+
+    Array.from(monster.getElementsByClassName("numbers")).forEach(el => {
+        if (combatant.template == "ELITE") {
+            el.classList.add("number-buffed");
+        }
+        if (combatant.template == "WEAK") {
+            el.classList.add("number-debuffed");
+        }
+    });
         
     monster.ondblclick = () => {
         document.getElementsByClassName("current-combatant tracker-participant")[0]?.classList.remove("current-combatant");

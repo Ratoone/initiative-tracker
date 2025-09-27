@@ -39,6 +39,7 @@ pub fn run() {
             commands::reset_initiative,
             commands::roll_initiative,
             commands::toggle_visible,
+            commands::update_template,
             commands::create_encounter,
             commands::rename_encounter,
             commands::delete_encounter,

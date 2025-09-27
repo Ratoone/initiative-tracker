@@ -2,7 +2,7 @@ use std::sync::Mutex;
 
 use tauri::{AppHandle, Emitter, Manager};
 
-use crate::{statblock::{Condition, Participant, CONDITIONS_WITHOUT_VALUE, CONDITIONS_WITH_VALUE}, statblock::Monster, tracker::{save, Encounter, TrackerData}};
+use crate::{statblock::{Condition, Monster, Participant, Template, CONDITIONS_WITHOUT_VALUE, CONDITIONS_WITH_VALUE}, tracker::{save, Encounter, TrackerData}};
 
 use super::AppState;
 
@@ -261,6 +261,21 @@ pub fn toggle_visible(
     let participant = app_state.get_current_encounter().find_by_id(id);
     if let Some(target) = participant {
         target.visible = !target.visible
+    }
+    update_tracker(&app, &app_state.tracker_data);
+}
+
+#[tauri::command]
+pub fn update_template(    
+    app: AppHandle,
+    state: tauri::State<'_, Mutex<AppState>>,
+    id: &str,
+    value: Template
+) {
+    let mut app_state = state.lock().unwrap();
+    let participant = app_state.get_current_encounter().find_by_id(id);
+    if let Some(target) = participant {
+        target.apply_template(value);
     }
     update_tracker(&app, &app_state.tracker_data);
 }
