@@ -1,7 +1,9 @@
+use rand::{rng, Rng};
+
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::statblock::Participant;
+use crate::statblock::{Participant, Type};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct TrackerData {
@@ -80,6 +82,15 @@ impl Encounter {
 
     pub fn reset_initiative(&mut self) {
         self.participants.iter_mut().for_each(|p| p.initiative = 0);
+    }
+
+    pub fn roll_initiative(&mut self) {
+        self.participants.iter_mut().for_each(|p| {
+            if p.kind == Type::PLAYER {
+                return;
+            }
+            p.initiative = rng().random_range(1..=20) + p.perception;
+        });
     }
 
     pub fn default() -> Self {

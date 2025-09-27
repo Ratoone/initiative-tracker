@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::statblock::{Defenses, Monster};
 
-#[derive(Serialize, Deserialize, Clone)]
-enum Type {
+#[derive(Serialize, Deserialize, Clone, PartialEq)]
+pub enum Type {
     MONSTER(String),
     PLAYER,
 }
@@ -53,7 +53,7 @@ fn default_true() -> bool {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Participant {
     pub id: String,
-    kind: Type,
+    pub kind: Type,
     pub name: String,
     pub max_hp: i64,
     pub hp: i64,
@@ -62,7 +62,7 @@ pub struct Participant {
     pub notes: String,
     lvl: i64,
     defenses: Defenses,
-    perception: i64,
+    pub perception: i64,
     #[serde(default= "default_true")]
     pub visible: bool,
 }

@@ -37,6 +37,7 @@ pub fn run() {
             commands::update_notes,
             commands::update_current,
             commands::reset_initiative,
+            commands::roll_initiative,
             commands::toggle_visible,
             commands::create_encounter,
             commands::rename_encounter,

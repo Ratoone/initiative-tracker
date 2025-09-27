@@ -68,11 +68,26 @@
     gap: 5px;
 }
 
+.grid-buttons {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
 .tracker-participant {
     justify-content: space-evenly;
     border: 3px solid #252525;
     border-radius: 10px;
     margin: 2.5px 0;
+}
+
+.editable-init {
+    min-width: 0.5em;
+}
+
+.participant-general {
+    max-width: 60%;
 }
 
 .encounter-chip {

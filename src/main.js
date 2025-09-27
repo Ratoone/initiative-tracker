@@ -230,12 +230,13 @@ function createTrackerParticipant(combatant, item) {
                 /
                 <span class="editable-max-hp" contenteditable="true">${combatant.max_hp ?? 0}</span>
             </div>
-            <div class="side-by-side">
+            <div class="grid-buttons">
                 <div class="dropdown">
                     <button class="dropbtn">Add Condition</button>
                     <div class="dropdown-content"></div>
                 </div>
                 ${item === undefined && combatant.kind?.MONSTER === undefined ? "" : "<button class='view-statblock'>Statblock</button>"}
+                ${item === undefined && combatant.kind?.MONSTER === undefined ? "" : "<div class='dropdown'><button class='dropbtn'>Template</button><div class='dropdown-content'></div></div>"}
                 <i class="fa toggle-visible ${!!combatant.visible ? "fa-eye" : "fa-eye-slash"}"></i>
                 <i class="fa fa-trash"></i>
             </div>
@@ -333,6 +334,19 @@ function createTrackerParticipant(combatant, item) {
         return `<a>${condition}</a>`
     });
 
+    let templateDropdown = monster.getElementsByClassName("dropdown-content")[1];
+    if (!!templateDropdown) {
+        ["Elite", "Weak", "None"].forEach(template => {
+            const choice = document.createElement("a");
+            choice.innerText = template;
+            choice.onclick = () => {
+            };
+            
+            templateDropdown.appendChild(choice);
+            return `<a>${template}</a>`
+        });
+    }
+        
     monster.ondblclick = () => {
         document.getElementsByClassName("current-combatant tracker-participant")[0]?.classList.remove("current-combatant");
         monster.classList.add("current-combatant");
@@ -408,5 +422,11 @@ $("#add-player").on("click", () => {
 
 $("#reset-initiative").on("click", () => {
     invoke("reset_initiative").then(() => {});
+    loadCurrentCombat();
+});
+
+
+$("#roll-initiative").on("click", () => {
+    invoke("roll_initiative").then(() => {});
     loadCurrentCombat();
 });
