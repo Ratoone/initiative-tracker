@@ -2,7 +2,6 @@ import * as mapper from "./mapper.js";
 
 "use strict";
 const { invoke } = window.__TAURI__.core;
-const { info } = window.__TAURI__.log;
 
 invoke("get_all").then(data => {
     loadTableData(data);
@@ -20,6 +19,8 @@ function showCampaigns() {
             
             if (campaign.id === data.current) {
                 opt.selected = true;
+                var lvl = document.getElementById("campaign-level");
+                lvl.innerText = `${campaign.level}`;
                 showEncounters(campaign);
             }
         });
@@ -39,12 +40,14 @@ function showCampaigns() {
                 return;
             }
 
-            console.log(e.target)
             const selectedCampaign = data.campaigns.filter(c => c.id === e.target.value)[0];
             invoke("set_current_campaign", {id: selectedCampaign.id}).then(() => {
                 data.current = selectedCampaign.current;
+                var lvl = document.getElementById("campaign-level");
+                lvl.innerText = `${selectedCampaign.level}`;
                 showEncounters(selectedCampaign);
             });
+            
         };
 
         document.getElementById("delete-campaign").onclick = _e => {
@@ -278,7 +281,7 @@ function createTrackerParticipant(combatant, item) {
     
     let currentHp = monster.getElementsByClassName("editable-hp")[0];
     currentHp.onblur = () => {
-        let value = parseInt(eval(currentHp.innerText.replace(/[^0-9\+\-]/, "")));
+        let value = parseInt(eval(currentHp.innerText.replace(/[^0-9\+\-]/g, "")));
         currentHp.innerText = value;
         if (value !== NaN) {
             invoke("update_hp", {id: monster.id, value: value}).then(() =>{});
@@ -287,7 +290,7 @@ function createTrackerParticipant(combatant, item) {
     
     let maxHp = monster.getElementsByClassName("editable-max-hp")[0];
     maxHp.onblur = () => {
-        let value = parseInt(eval(maxHp.innerText.replace(/[^0-9\+\-]/, "")));
+        let value = parseInt(eval(maxHp.innerText.replace(/[^0-9\+\-]/g, "")));
         maxHp.innerText = value;
         if (value !== NaN) {
             invoke("update_max_hp", {id: monster.id, value: value}).then(() =>{});
@@ -307,7 +310,7 @@ function createTrackerParticipant(combatant, item) {
     let initiative = monster.getElementsByClassName("editable-init")[0];
     initiative.onblur = () => {
         console.log("Blurred!")
-        let value = parseInt(initiative.innerText.replace(/[^0-9\+\-]/, ""));
+        let value = parseInt(initiative.innerText.replace(/[^0-9\+\-]/g, ""));
         initiative.innerText = value;
         if (value !== NaN) {
             invoke("update_initiative", {id: monster.id, value: value}).then(() =>{});
@@ -343,7 +346,7 @@ function createTrackerParticipant(combatant, item) {
                 choice.classList.add("current-combatant");
             }
             choice.onclick = () => {
-                invoke("update_template", {id: monster.id, value: template.toUpperCase()});
+                invoke("update_template", {id: monster.id, value: template.toUpperCase()}).then(() => {});
                 loadCurrentCombat();
             };
             
@@ -443,4 +446,24 @@ $("#reset-initiative").on("click", () => {
 $("#roll-initiative").on("click", () => {
     invoke("roll_initiative").then(() => {});
     loadCurrentCombat();
+});
+
+$("#campaign-level").on("keydown", function (e) {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        this.blur();
+        return false;
+    }
+    return true;
+});
+
+
+$("#campaign-level").on("blur", function () {
+    let value = parseInt(eval(this.innerText.replace(/[^0-9\+\-]/g, "")));
+    this.innerText = value;
+    if (value !== NaN) {
+        invoke("update_campaign_level", {value: value}).then(() => {
+            showCampaigns();
+        });
+    }
 });

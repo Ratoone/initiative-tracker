@@ -6,6 +6,7 @@ use crate::statblock::{Defenses, Monster};
 pub enum Type {
     MONSTER(String),
     PLAYER,
+    CUSTOM,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq)]
@@ -68,7 +69,7 @@ pub struct Participant {
     pub initiative: i64,
     pub conditions: Vec<Condition>,
     pub notes: String,
-    lvl: i64,
+    pub lvl: i64,
     defenses: Defenses,
     pub perception: i64,
     #[serde(default= "default_true")]

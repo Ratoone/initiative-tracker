@@ -31,6 +31,8 @@ pub struct Campaign {
     pub current: String,
     pub name: String,
     pub encounters: Vec<Encounter>,
+    #[serde(default)]
+    pub level: i64,
 }
 
 impl Campaign {
@@ -41,6 +43,7 @@ impl Campaign {
             current: encounter.id.clone(),
             name: String::from("default"),
             encounters: vec![encounter],
+            level: i64::default(),
         }
     }
 

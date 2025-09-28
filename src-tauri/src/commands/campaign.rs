@@ -2,7 +2,7 @@ use std::sync::Mutex;
 
 use tauri::AppHandle;
 
-use crate::tracker::{Campaign, TrackerData};
+use crate::{statblock::Type, tracker::{Campaign, TrackerData}};
 
 use super::{update_tracker, AppState};
 
@@ -44,5 +44,23 @@ pub fn rename_campaign(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>,
     let mut app_state = state.lock().unwrap();
     let current: &mut Campaign = app_state.tracker_data.campaigns.iter_mut().find(|campaign| campaign.id == id).unwrap();
     current.name = name.to_string();
+    update_tracker(&app, &app_state.tracker_data);
+}
+
+
+#[tauri::command]
+pub fn update_campaign_level(
+    app: AppHandle, 
+    state: tauri::State<'_, Mutex<AppState>>,
+    value: i64
+) {
+    let mut app_state = state.lock().unwrap();
+    let current: &mut Campaign = app_state.tracker_data.get_current_campaign();
+    current.level = value;
+    current.encounters.iter_mut().for_each(|e| e.participants.iter_mut().for_each(|p| {
+        if p.kind == Type::PLAYER {
+            p.lvl = value;
+        }
+    }));
     update_tracker(&app, &app_state.tracker_data);
 }

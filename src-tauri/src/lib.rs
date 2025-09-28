@@ -25,6 +25,7 @@ pub fn run() {
             commands::set_current_campaign,
             commands::rename_campaign,
             commands::delete_campaign,
+            commands::update_campaign_level,
             commands::get_tracker,
             commands::remove_from_tracker,
             commands::update_hp,
