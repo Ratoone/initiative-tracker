@@ -18,6 +18,7 @@ pub fn run() {
             commands::find_by_name,
             commands::get_by_name,
             commands::find_by_trait,
+            commands::find_by_level,
             commands::open_player_view,
             commands::add_to_tracker,
             commands::get_campaigns,

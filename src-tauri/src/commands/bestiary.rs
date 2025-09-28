@@ -42,3 +42,12 @@ pub fn find_by_trait(state: tauri::State<'_, Mutex<AppState>>, name: &str) -> Ve
     monsters.sort_by(|m1, m2| m1.name.cmp(&m2.name));
     monsters
 }
+
+#[tauri::command]
+pub fn find_by_level(state: tauri::State<'_, Mutex<AppState>>, level: i64) -> Vec<Monster> {
+    let cache = &state.lock().unwrap().bestiary;
+    let mut monsters: Vec<Monster> = cache.monsters.clone();
+    monsters.retain(|monster| monster.lvl == level);
+    monsters.sort_by(|m1, m2| m1.name.cmp(&m2.name));
+    monsters
+}

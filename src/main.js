@@ -420,6 +420,8 @@ async function getFilteredMonsterData(searchValue, searchBy) {
             return await invoke("find_by_name", {name: searchValue});
         case "Trait":
             return await invoke("find_by_trait", {name: searchValue});
+        case "Level":
+            return await invoke("find_by_level", {level: parseInt(searchValue)});
         default:
             return [];
     }
