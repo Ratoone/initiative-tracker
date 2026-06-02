@@ -11,7 +11,7 @@ impl AppState {
     pub fn new(app: &AppHandle) -> Self {
         let data = load(&app.path().app_data_dir().unwrap());
         AppState {
-            bestiary: Bestiary::new("../data/packs"),
+            bestiary: Bestiary::empty(),
             tracker_data: data,
         }
     }

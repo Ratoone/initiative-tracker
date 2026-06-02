@@ -2,9 +2,12 @@ import * as mapper from "./mapper.js";
 
 "use strict";
 const { invoke } = window.__TAURI__.core;
+const { listen } = window.__TAURI__.event;
 
-invoke("get_all").then(data => {
-    loadTableData(data);
+invoke("get_all").then(data => loadTableData(data));
+
+listen('bestiary_loaded', () => {
+    invoke("get_all").then(data => loadTableData(data));
 });
 
 function showCampaigns() {
@@ -179,16 +182,31 @@ function displayStatblock(item) {
 
         return mapper.listValue("Recall Knowledge", `- ${trait} (${skill}) DC ${mapper.levelToDc(item.lvl) + mapper.rarityDcMod(item.traits.rarity)}`);
     }).filter(text => text !== "").join("<br>");
-    
+
     createTraitBar(item.traits);
     document.getElementById("statblock-senses").innerHTML = `${mapper.listValue("Perception", item.senses.perception)} ${mapper.listValue("", item.senses.details)} ${mapper.listArray("", item.senses.rest)}`;
     document.getElementById("statblock-languages").innerHTML = `${mapper.listArray("Languages", item.languages)} ${item.language_detail}`;
     document.getElementById("statblock-skills").innerHTML = `<b>Skills</b> ${mapper.formatSkills(item.skills)}`;
-    
+
+    const interactionAbilities = item.abilities.filter(a => a.category === 'Interaction');
+    document.getElementById("statblock-interaction-abilities").innerHTML =
+        interactionAbilities.map(mapper.formatAbility).join('');
+
     document.getElementById("statblock-defenses").innerHTML = `${mapper.listValue("AC", item.defenses.ac)} ${mapper.listValue("", item.defenses.ac_detail)} ${mapper.listValue("Fort", item.defenses.fortitude)} ${mapper.listValue("Reflex", item.defenses.reflex)} ${mapper.listValue("Will", item.defenses.will)} ${item.defenses.all_saves}`;
     document.getElementById("statblock-health").innerHTML = `${mapper.listValue("HP", item.hp)} ${item.hp_detail ? item.hp_detail + ";" : ""} ${mapper.listArray("Immunities", item.endurances.immunities)} ${mapper.listArray("Resistances", item.endurances.resistances)} ${mapper.listArray("Weaknesses", item.endurances.weaknesses)}`;
 
+    const defensiveAbilities = item.abilities.filter(a => a.category === 'Defensive');
+    document.getElementById("statblock-defensive-abilities").innerHTML =
+        defensiveAbilities.map(mapper.formatAbility).join('');
+
     document.getElementById("statblock-speed").innerHTML = `<b>Speed</b> ${mapper.listValue("", item.speed.base)} ${mapper.listArray("", item.speed.rest)}`;
+
+    document.getElementById("statblock-attacks").innerHTML =
+        (item.attacks || []).map(mapper.formatAttack).join('<br>');
+
+    const offensiveAbilities = item.abilities.filter(a => a.category === 'Offensive');
+    document.getElementById("statblock-abilities").innerHTML =
+        offensiveAbilities.map(mapper.formatAbility).join('');
 }
 
 function onAddToTrackerClick(item) {
@@ -227,11 +245,12 @@ function createTrackerParticipant(combatant, item) {
                 <div class="level">${combatant.lvl ?? ""}</div>
                 <div class="editable-name" contenteditable="true">${combatant.name}</div>
             </div>
-            <div class="health-bar">
-                <i class="fa fa-heart"></i> 
+            <div class="health-bar-wrapper">
+                <i class="fa fa-heart"></i>
                 <span class="editable-hp" contenteditable="true">${combatant.hp ?? 0}</span>
                 /
                 <span class="editable-max-hp" contenteditable="true">${combatant.max_hp ?? 0}</span>
+                <progress class="health-bar" value="${combatant.hp ?? 0}" max="${combatant.max_hp ?? 0}"></progress>
             </div>
             <div class="grid-buttons">
                 <div class="dropdown">
@@ -279,20 +298,24 @@ function createTrackerParticipant(combatant, item) {
         };
     });
     
+    let hpBar = monster.querySelector('.health-bar');
+
     let currentHp = monster.getElementsByClassName("editable-hp")[0];
     currentHp.onblur = () => {
         let value = parseInt(eval(currentHp.innerText.replace(/[^0-9\+\-]/g, "")));
         currentHp.innerText = value;
         if (value !== NaN) {
+            hpBar.value = value;
             invoke("update_hp", {id: monster.id, value: value}).then(() =>{});
         }
     }
-    
+
     let maxHp = monster.getElementsByClassName("editable-max-hp")[0];
     maxHp.onblur = () => {
         let value = parseInt(eval(maxHp.innerText.replace(/[^0-9\+\-]/g, "")));
         maxHp.innerText = value;
         if (value !== NaN) {
+            hpBar.max = value;
             invoke("update_max_hp", {id: monster.id, value: value}).then(() =>{});
         }
     }

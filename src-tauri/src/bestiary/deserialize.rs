@@ -1,7 +1,11 @@
 use std::{collections::HashMap, fs, path::Path};
 
-use crate::statblock::{Ability, Defenses, Endurances, Monster, Senses, Speeds, Traits};
+use crate::statblock::{
+    Ability, AbilityCategory, ActionType, Attack, DamageRoll, Defenses, Endurances, Monster,
+    Senses, Speeds, Traits,
+};
 
+use rayon::prelude::*;
 use serde_json::Value;
 use walkdir::WalkDir;
 
@@ -53,55 +57,118 @@ impl<T, F> ArrayValue<T, F> for Value {
 }
 
 pub fn walk_bestiary(base_path: &str) -> Vec<Monster> {
-    let mut entries: Vec<Monster> = vec![];
+    let paths: Vec<_> = WalkDir::new(base_path)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().is_file())
+        .collect();
 
-    for entry in WalkDir::new(base_path).into_iter().filter_map(|e| e.ok()) {
-        let dir_entry = entry.path();
-        if dir_entry.is_dir() {
-            continue;
-        }
-
-        let result = deserialize(dir_entry);
-        if let Some(creature) = result {
-            entries.push(creature);
-        }
-    }
-
-    entries
+    paths
+        .par_iter()
+        .filter_map(|e| deserialize(e.path()))
+        .collect()
 }
 
 pub fn deserialize(path: &Path) -> Option<Monster> {
-    let json = fs::read_to_string(path).unwrap();
-    let parsed: Value = serde_json::from_str(&json).unwrap();
+    let json = fs::read_to_string(path).ok()?;
+    let parsed: Value = serde_json::from_str(&json).ok()?;
     if parsed["type"] != "npc" {
         return None;
     }
     let system = &parsed["system"];
     let attributes = &system["attributes"];
 
+    let mut skills = map_skills(&system["skills"]);
+    let mut abilities: Vec<Ability> = vec![];
+    let mut attacks: Vec<Attack> = vec![];
+
+    if let Some(items) = parsed["items"].as_array() {
+        for item in items {
+            match item["type"].get_string().as_str() {
+                "melee" => {
+                    attacks.push(map_attack(item));
+                }
+                "action" => {
+                    abilities.push(map_action_ability(item));
+                }
+                "lore" => {
+                    let name = item["name"].get_string().to_lowercase();
+                    let modifier = item["system"]["mod"]["value"].get_int();
+                    skills.insert(name, format!("+{}", modifier));
+                }
+                _ => {}
+            }
+        }
+    }
+
     Some(Monster {
         name: parsed["name"].get_string(),
         defenses: map_saves(&system["saves"], attributes),
-        hp: attributes["hp"]["max"].as_i64().unwrap(),
+        hp: attributes["hp"]["max"].as_i64().unwrap_or_default(),
         hp_detail: attributes["hp"]["details"].get_string(),
         lvl: system["details"]["level"].int_value(),
         endurances: map_endurances(attributes),
         traits: map_traits(&system["traits"]),
-        skills: map_skills(&system["skills"]),
+        skills,
         senses: map_senses(&system["perception"]),
         languages: system["details"]["languages"]["value"].array_value(StringValue::get_string),
         language_detail: system["details"]["languages"]["details"].get_string(),
         speed: map_speed(&attributes["speed"]),
-        abilities: parsed["items"].array_value(map_ability)
+        abilities,
+        attacks,
     })
 }
 
-fn map_ability(item: &Value) -> Ability {
+fn map_attack(item: &Value) -> Attack {
+    let damage_rolls = item["system"]["damageRolls"]
+        .as_object()
+        .map(|map| {
+            map.values()
+                .map(|roll| DamageRoll {
+                    damage: roll["damage"].get_string(),
+                    damage_type: roll["damageType"].get_string(),
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+
+    Attack {
+        name: item["name"].get_string(),
+        bonus: item["system"]["bonus"]["value"].get_int(),
+        traits: item["system"]["traits"]["value"].array_value(StringValue::get_string),
+        damage_rolls,
+    }
+}
+
+fn map_action_ability(item: &Value) -> Ability {
+    let action_type_str = item["system"]["actionType"]["value"].get_string();
+    let actions_value = item["system"]["actions"]["value"].as_i64();
+
+    let action_type = match action_type_str.as_str() {
+        "passive" => Some(ActionType::Passive),
+        "free" => Some(ActionType::Free),
+        "reaction" => Some(ActionType::Reaction),
+        "action" => match actions_value {
+            Some(1) => Some(ActionType::One),
+            Some(2) => Some(ActionType::Two),
+            Some(3) => Some(ActionType::Three),
+            _ => None,
+        },
+        _ => None,
+    };
+
+    let category = match item["system"]["category"].get_string().as_str() {
+        "interaction" => AbilityCategory::Interaction,
+        "defensive" => AbilityCategory::Defensive,
+        _ => AbilityCategory::Offensive,
+    };
+
     Ability {
         name: item["name"].get_string(),
-        description: item["system"]["description"].string_value(),
-        actions: None,
+        description: item["system"]["description"]["value"].get_string(),
         traits: item["system"]["traits"]["value"].array_value(StringValue::get_string),
+        action_type,
+        category,
     }
 }
 
@@ -131,15 +198,26 @@ fn map_senses(senses: &Value) -> Senses {
     }
 }
 
-fn map_skills(skills: &Value) -> HashMap<String, i64> {
-    let mut mapped_skills: HashMap<String, i64> = HashMap::new();
+fn map_skills(skills: &Value) -> HashMap<String, String> {
+    let mut mapped_skills: HashMap<String, String> = HashMap::new();
     if skills.is_null() {
         return mapped_skills;
     }
 
     let map = skills.as_object().unwrap();
     map.iter().for_each(|(key, value)| {
-        mapped_skills.insert(key.clone(), value["base"].get_int());
+        let base = value["base"].get_int();
+        let mut display = format!("+{}", base);
+        if let Some(specials) = value["special"].as_array() {
+            for special in specials {
+                let special_base = special["base"].get_int();
+                let label = special["label"].get_string();
+                if !label.is_empty() {
+                    display += &format!(" (+{} {})", special_base, label);
+                }
+            }
+        }
+        mapped_skills.insert(key.clone(), display);
     });
     mapped_skills
 }

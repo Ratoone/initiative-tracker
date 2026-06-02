@@ -13,12 +13,27 @@ pub struct Monster {
     pub lvl: i64,
     pub endurances: Endurances,
     pub traits: Traits,
-    pub skills: HashMap<String, i64>,
+    pub skills: HashMap<String, String>,
     pub senses: Senses,
     pub languages: Vec<String>,
     pub language_detail: String,
     pub speed: Speeds,
     pub abilities: Vec<Ability>,
+    pub attacks: Vec<Attack>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct DamageRoll {
+    pub damage: String,
+    pub damage_type: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct Attack {
+    pub name: String,
+    pub bonus: i64,
+    pub traits: Vec<String>,
+    pub damage_rolls: Vec<DamageRoll>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

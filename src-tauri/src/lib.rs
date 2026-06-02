@@ -1,6 +1,6 @@
 use std::sync::Mutex;
 
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 
 mod bestiary;
 mod commands;
@@ -49,6 +49,17 @@ pub fn run() {
         ])
         .setup(|app| {
             app.manage(Mutex::new(commands::AppState::new(app.handle())));
+            let app_handle = app.handle().clone();
+            std::thread::spawn(move || {
+                let monsters = bestiary::walk_bestiary("../data/packs");
+                app_handle
+                    .state::<Mutex<commands::AppState>>()
+                    .lock()
+                    .unwrap()
+                    .bestiary
+                    .monsters = monsters;
+                app_handle.emit("bestiary_loaded", ()).unwrap();
+            });
             Ok(())
         })
         .run(tauri::generate_context!())

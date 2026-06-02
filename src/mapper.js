@@ -1,9 +1,58 @@
 const { invoke } = window.__TAURI__.core;
 
 export function formatSkills(skills) {
-    return Object.entries(skills).reduce((str, [p, val]) => {
-        return `${str} ${p} +${val}, `;
-    }, "").slice(0, -2);
+    return Object.entries(skills)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([name, modifier]) => `${titleCase(name)} ${modifier}`)
+        .join(', ');
+}
+
+function titleCase(str) {
+    return str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
+
+export function formatActionType(actionType) {
+    switch (actionType) {
+        case 'One': return ' [one-action]';
+        case 'Two': return ' [two-actions]';
+        case 'Three': return ' [three-actions]';
+        case 'Free': return ' [free-action]';
+        case 'Reaction': return ' [reaction]';
+        default: return '';
+    }
+}
+
+export function formatTraitForDisplay(trait) {
+    const reachMatch = trait.match(/^reach-(\d+)$/);
+    if (reachMatch) {
+        return `reach ${reachMatch[1]} feet`;
+    }
+    return trait;
+}
+
+export function formatAttack(attack) {
+    const isAgile = attack.traits.includes('agile');
+    const map1 = attack.bonus - (isAgile ? 4 : 5);
+    const map2 = attack.bonus - (isAgile ? 8 : 10);
+    const traitsDisplay = attack.traits.map(formatTraitForDisplay).join(', ');
+    const traitsLabel = traitsDisplay ? ` (${traitsDisplay})` : '';
+    const damageDisplay = attack.damage_rolls
+        .map(r => `${r.damage} ${r.damage_type}`)
+        .join(' plus ');
+    return `<b>Melee</b> [one-action] ${attack.name} +${attack.bonus} [+${map1}/+${map2}]${traitsLabel}, Damage ${damageDisplay}`;
+}
+
+export function formatAbility(ability) {
+    const actionLabel = formatActionType(ability.action_type);
+    const traitsLabel = ability.traits.length > 0 ? ` (${ability.traits.join(', ')})` : '';
+    const desc = stripPf2eLinks(ability.description);
+    return `<div class="statblock-ability"><b>${ability.name}</b>${actionLabel}${traitsLabel} ${desc}</div>`;
+}
+
+export function stripPf2eLinks(html) {
+    return html
+        .replace(/@UUID\[[^\]]+\]\{([^}]+)\}/g, '$1')
+        .replace(/@UUID\[[^\]]+\]/g, '');
 }
 
 export function listValue(name, value) {
