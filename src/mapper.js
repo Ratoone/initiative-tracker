@@ -209,6 +209,7 @@ export function createCondition(id, name, value) {
     const cond = document.createElement("img");
     cond.src = `/assets/conditions-svg/${name.toLowerCase()}.svg`;
     cond.classList.add("condition");
+    cond.title = name;
 
     container.appendChild(cond);
     let badge;

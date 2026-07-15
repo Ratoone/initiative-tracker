@@ -96,6 +96,10 @@ function mapHealthPercent(percent) {
         return "BADLY INJURED";
     }
 
+    if (percent >= 0.1) {
+        return "HEAVILY INJURED";
+    }
+
     if (percent > 0) {
         return "NEAR DEATH";
     }
