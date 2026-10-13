@@ -33,6 +33,8 @@ pub fn run() {
             commands::update_max_hp,
             commands::update_name,
             commands::add_player,
+            commands::add_custom,
+            commands::update_stat,
             commands::update_initiative,
             commands::add_condition,
             commands::remove_condition,

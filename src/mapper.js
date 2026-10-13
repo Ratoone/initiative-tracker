@@ -81,8 +81,20 @@ export function mapCombatant(item) {
 export function newPlayer() {
     return {
         id: crypto.randomUUID(),
+        kind: "PLAYER",
         name: "",
         conditions: [],
+        visible: true,
+    };
+}
+
+export function newEnemy() {
+    return {
+        id: crypto.randomUUID(),
+        kind: "CUSTOM",
+        name: "",
+        conditions: [],
+        visible: false,
     };
 }
 
@@ -100,7 +112,7 @@ export function rarityDcMod(rarity) {
             return 2;
         case "rare":
             return 5;
-        case "uniqeu":
+        case "unique":
             return 10;
         default:
             return 0;

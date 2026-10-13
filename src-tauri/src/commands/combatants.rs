@@ -2,7 +2,7 @@ use std::sync::Mutex;
 
 use tauri::{AppHandle, Emitter, Manager};
 
-use crate::{statblock::{Condition, Monster, Participant, Template, CONDITIONS_WITHOUT_VALUE, CONDITIONS_WITH_VALUE}, tracker::{save, Encounter, TrackerData}};
+use crate::{statblock::{Condition, Monster, Participant, Stat, Template, Type, CONDITIONS_WITHOUT_VALUE, CONDITIONS_WITH_VALUE}, tracker::{save, Encounter, TrackerData}};
 
 use super::AppState;
 
@@ -95,9 +95,33 @@ pub fn update_name(
 #[tauri::command]
 pub fn add_player(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str) {
     let mut app_state = state.lock().unwrap();
-    let participant: Participant = Participant::new(id);
+    let participant: Participant = Participant::new(id, Type::PLAYER);
     app_state.get_current_encounter().add_combatant(participant);
     update_tracker(&app, &app_state.tracker_data);
+}
+
+#[tauri::command]
+pub fn add_custom(app: AppHandle, state: tauri::State<'_, Mutex<AppState>>, id: &str) {
+    let mut app_state = state.lock().unwrap();
+    let participant: Participant = Participant::new(id, Type::CUSTOM);
+    app_state.get_current_encounter().add_combatant(participant);
+    update_tracker(&app, &app_state.tracker_data);
+}
+
+#[tauri::command]
+pub fn update_stat(
+    app: AppHandle,
+    state: tauri::State<'_, Mutex<AppState>>,
+    id: &str,
+    stat: Stat,
+    value: i64,
+) {
+    let mut app_state = state.lock().unwrap();
+    let participant = app_state.get_current_encounter().find_by_id(id);
+    if let Some(target) = participant {
+        target.set_stat(stat, value);
+        update_tracker(&app, &app_state.tracker_data);
+    }
 }
 
 #[tauri::command]

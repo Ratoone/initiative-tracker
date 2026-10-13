@@ -238,11 +238,22 @@ function createTrackerParticipant(combatant, item) {
     const monster = document.createElement("div");
     monster.id = combatant.id;
     monster.classList = "tracker-participant side-by-side"
+    const isCustom = combatant.kind === "CUSTOM";
+    if (isCustom) {
+        monster.classList.add("custom-participant");
+    }
+    const statsEditable = isCustom || combatant.kind === "PLAYER";
+    const stat = (name, value) => statsEditable
+        ? `<span class="editable-stat" data-stat="${name}" contenteditable="true">${value ?? 0}</span>`
+        : `${value ?? 0}`;
     monster.innerHTML = `
         <div class="editable-init" contenteditable="true">${combatant.initiative || "??"}</div>
         <div class="participant-general">
             <div class="side-by-side">
-                <div class="level">${combatant.lvl ?? ""}</div>
+                ${statsEditable
+                    ? `<div class="level editable-stat" data-stat="LEVEL" contenteditable="true">${combatant.lvl ?? 0}</div>`
+                    : `<div class="level">${combatant.lvl ?? ""}</div>`}
+                ${isCustom ? '<i class="fa fa-skull" title="Custom enemy"></i>' : ""}
                 <div class="editable-name" contenteditable="true">${combatant.name}</div>
             </div>
             <div class="health-bar-wrapper">
@@ -266,12 +277,12 @@ function createTrackerParticipant(combatant, item) {
             <div class="participant-notes" contenteditable="true">${combatant.notes ?? ""}</div>
         </div>
         <div class="numbers">
-            <div><i class="fa fa-dumbbell"></i> +${combatant.defenses?.fortitude ?? 0}</div>
-            <div><i class="fa fa-bolt"></i> +${combatant.defenses?.reflex ?? 0}</div>
-            <div><i class="fa fa-brain"></i> +${combatant.defenses?.will ?? 0}</div>
-            <div><i class="fa fa-eye"></i> +${combatant.perception ?? 0}</div>
+            <div><i class="fa fa-dumbbell"></i> +${stat("FORTITUDE", combatant.defenses?.fortitude)}</div>
+            <div><i class="fa fa-bolt"></i> +${stat("REFLEX", combatant.defenses?.reflex)}</div>
+            <div><i class="fa fa-brain"></i> +${stat("WILL", combatant.defenses?.will)}</div>
+            <div><i class="fa fa-eye"></i> +${stat("PERCEPTION", combatant.perception)}</div>
         </div>
-        <div class="numbers"><i class="fa fa-shield"></i> ${combatant.defenses?.ac ?? 0}</div>
+        <div class="numbers"><i class="fa fa-shield"></i> ${stat("AC", combatant.defenses?.ac)}</div>
     `;
 
     if (item !== undefined) {
@@ -329,6 +340,20 @@ function createTrackerParticipant(combatant, item) {
     notes.onblur = () => {
         invoke("update_notes", {id: monster.id, value: notes.innerText}).then(() =>{});
     }
+
+    monster.querySelectorAll(".editable-stat").forEach(statField => {
+        let lastValue = parseInt(statField.innerText) || 0;
+        statField.onblur = () => {
+            let value = parseInt(statField.innerText.replace(/[^0-9\+\-]/g, ""));
+            if (isNaN(value)) {
+                statField.innerText = lastValue;
+                return;
+            }
+            lastValue = value;
+            statField.innerText = value;
+            invoke("update_stat", {id: monster.id, stat: statField.dataset.stat, value: value}).then(() => {});
+        };
+    });
 
     let initiative = monster.getElementsByClassName("editable-init")[0];
     initiative.onblur = () => {
@@ -460,6 +485,14 @@ $("#add-player").on("click", () => {
     const participant = createTrackerParticipant(combatant);
     tracker.appendChild(participant);
     invoke("add_player", {id: participant.id}).then(() => {});
+});
+
+$("#add-enemy").on("click", () => {
+    const tracker = document.getElementById("encounter-tracker");
+    const combatant = mapper.newEnemy();
+    const participant = createTrackerParticipant(combatant);
+    tracker.appendChild(participant);
+    invoke("add_custom", {id: participant.id}).then(() => {});
 });
 
 $("#reset-initiative").on("click", () => {

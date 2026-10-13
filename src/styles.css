@@ -82,6 +82,15 @@
     margin: 2.5px 0;
 }
 
+.custom-participant {
+    border-color: #cd0000;
+    background-color: rgba(205, 0, 0, 0.12);
+}
+
+.custom-participant .fa-skull {
+    color: #cd0000;
+}
+
 .editable-init {
     min-width: 0.5em;
 }

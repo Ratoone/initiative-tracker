@@ -17,6 +17,16 @@ pub enum Template {
     ELITE = 1
 }
 
+#[derive(Deserialize, Clone, Copy, Debug)]
+pub enum Stat {
+    LEVEL,
+    AC,
+    FORTITUDE,
+    REFLEX,
+    WILL,
+    PERCEPTION,
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Condition {
     pub variant: String,
@@ -99,10 +109,11 @@ impl Into<Participant> for Monster {
 }
 
 impl Participant {
-    pub fn new(id: &str) -> Participant {
+    pub fn new(id: &str, kind: Type) -> Participant {
+        let visible = kind == Type::PLAYER;
         Participant {
             id: id.to_owned(),
-            kind: Type::PLAYER,
+            kind,
             name: String::new(),
             max_hp: 0,
             hp: 0,
@@ -112,8 +123,19 @@ impl Participant {
             lvl: 0,
             defenses: Defenses::default(),
             perception: 0,
-            visible: true,
+            visible,
             template: Template::default(),
+        }
+    }
+
+    pub fn set_stat(&mut self, stat: Stat, value: i64) {
+        match stat {
+            Stat::LEVEL => self.lvl = value,
+            Stat::AC => self.defenses.ac = value,
+            Stat::FORTITUDE => self.defenses.fortitude = value,
+            Stat::REFLEX => self.defenses.reflex = value,
+            Stat::WILL => self.defenses.will = value,
+            Stat::PERCEPTION => self.perception = value,
         }
     }
 
