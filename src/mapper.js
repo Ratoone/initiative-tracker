@@ -98,6 +98,43 @@ export function newEnemy() {
     };
 }
 
+const ALL_STATS = ["AC", "FORTITUDE", "REFLEX", "WILL", "PERCEPTION"];
+
+const STATUS_PENALTIES = {
+    Frightened: ALL_STATS,
+    Sickened: ALL_STATS,
+    Stupefied: ["WILL", "PERCEPTION"],
+    Drained: ["FORTITUDE"],
+    Clumsy: ["REFLEX", "AC"],
+};
+
+// Status penalties don't stack, only the worst one applies; off-guard is a circumstance penalty on top
+export function statPenalties(conditions) {
+    const penalties = Object.fromEntries(ALL_STATS.map(stat => [stat, 0]));
+    conditions.forEach(condition => {
+        (STATUS_PENALTIES[condition.variant] ?? []).forEach(stat => {
+            penalties[stat] = Math.max(penalties[stat], condition.value ?? 0);
+        });
+    });
+    if (conditions.some(condition => condition.variant === "OffGuard")) {
+        penalties.AC += 2;
+    }
+    return penalties;
+}
+
+export function signed(value) {
+    return value < 0 ? `${value}` : `+${value}`;
+}
+
+// Evaluates simple arithmetic like "25-7"; NaN when the input isn't a valid number or expression
+export function evaluateNumber(text) {
+    try {
+        return parseInt(eval(text.replace(/[^0-9\+\-]/g, "")));
+    } catch {
+        return NaN;
+    }
+}
+
 export function levelToDc(level) {
     if (level < 20) {
         return level + Math.floor(level / 3) + 14;
@@ -197,7 +234,7 @@ export const conditions = [
     "Wounded"
 ];
 
-export function createCondition(id, name, value) {
+export function createCondition(id, name, value, onChange) {
     if (!value && [
         "Clumsy",
         "Doomed",
@@ -238,7 +275,7 @@ export function createCondition(id, name, value) {
             if (value) {
                 badge.textContent = parseInt(badge.textContent) + 1;
             }
-            invoke("add_condition", {id: id, name: name}).then(() => {});
+            invoke("add_condition", {id: id, name: name}).then(conditions => onChange?.(conditions));
         }
     }
 
@@ -250,7 +287,7 @@ export function createCondition(id, name, value) {
             } else {
                 badge.textContent = parseInt(badge.textContent) - 1;
             }
-            invoke("remove_condition", {id: id, name: name}).then(() => {});
+            invoke("remove_condition", {id: id, name: name}).then(conditions => onChange?.(conditions));
         }
     };
 

@@ -243,16 +243,23 @@ function createTrackerParticipant(combatant, item) {
         monster.classList.add("custom-participant");
     }
     const statsEditable = isCustom || combatant.kind === "PLAYER";
-    const stat = (name, value) => statsEditable
-        ? `<span class="editable-stat" data-stat="${name}" contenteditable="true">${value ?? 0}</span>`
-        : `${value ?? 0}`;
+    // Base values as stored in the backend; the displayed values have condition penalties applied
+    const stats = {
+        LEVEL: combatant.lvl ?? 0,
+        AC: combatant.defenses?.ac ?? 0,
+        FORTITUDE: combatant.defenses?.fortitude ?? 0,
+        REFLEX: combatant.defenses?.reflex ?? 0,
+        WILL: combatant.defenses?.will ?? 0,
+        PERCEPTION: combatant.perception ?? 0,
+    };
+    const stat = (name, extraClass = "") => statsEditable
+        ? `<span class="stat editable-stat ${extraClass}" data-stat="${name}" contenteditable="true"></span>`
+        : `<span class="stat ${extraClass}" data-stat="${name}"></span>`;
     monster.innerHTML = `
         <div class="editable-init" contenteditable="true">${combatant.initiative || "??"}</div>
         <div class="participant-general">
             <div class="side-by-side">
-                ${statsEditable
-                    ? `<div class="level editable-stat" data-stat="LEVEL" contenteditable="true">${combatant.lvl ?? 0}</div>`
-                    : `<div class="level">${combatant.lvl ?? ""}</div>`}
+                ${stat("LEVEL", "level")}
                 ${isCustom ? '<i class="fa fa-skull" title="Custom enemy"></i>' : ""}
                 <div class="editable-name" contenteditable="true">${combatant.name}</div>
             </div>
@@ -277,13 +284,25 @@ function createTrackerParticipant(combatant, item) {
             <div class="participant-notes" contenteditable="true">${combatant.notes ?? ""}</div>
         </div>
         <div class="numbers">
-            <div><i class="fa fa-dumbbell"></i> +${stat("FORTITUDE", combatant.defenses?.fortitude)}</div>
-            <div><i class="fa fa-bolt"></i> +${stat("REFLEX", combatant.defenses?.reflex)}</div>
-            <div><i class="fa fa-brain"></i> +${stat("WILL", combatant.defenses?.will)}</div>
-            <div><i class="fa fa-eye"></i> +${stat("PERCEPTION", combatant.perception)}</div>
+            <div><i class="fa fa-dumbbell"></i> ${stat("FORTITUDE", "signed")}</div>
+            <div><i class="fa fa-bolt"></i> ${stat("REFLEX", "signed")}</div>
+            <div><i class="fa fa-brain"></i> ${stat("WILL", "signed")}</div>
+            <div><i class="fa fa-eye"></i> ${stat("PERCEPTION", "signed")}</div>
         </div>
-        <div class="numbers"><i class="fa fa-shield"></i> ${stat("AC", combatant.defenses?.ac)}</div>
+        <div class="numbers"><i class="fa fa-shield"></i> ${stat("AC")}</div>
     `;
+
+    let conditions = combatant.conditions;
+    const refreshStats = () => {
+        const penalties = mapper.statPenalties(conditions);
+        monster.querySelectorAll(".stat").forEach(field => {
+            const penalty = penalties[field.dataset.stat] ?? 0;
+            const value = stats[field.dataset.stat] - penalty;
+            field.innerText = field.classList.contains("signed") ? mapper.signed(value) : value;
+            field.classList.toggle("stat-penalized", penalty > 0);
+        });
+    };
+    refreshStats();
 
     if (item !== undefined) {
         monster.getElementsByClassName("view-statblock")[0].onclick = () => displayStatblock(item);
@@ -312,23 +331,31 @@ function createTrackerParticipant(combatant, item) {
     let hpBar = monster.querySelector('.health-bar');
 
     let currentHp = monster.getElementsByClassName("editable-hp")[0];
+    let lastHp = combatant.hp ?? 0;
     currentHp.onblur = () => {
-        let value = parseInt(eval(currentHp.innerText.replace(/[^0-9\+\-]/g, "")));
-        currentHp.innerText = value;
-        if (value !== NaN) {
-            hpBar.value = value;
-            invoke("update_hp", {id: monster.id, value: value}).then(() =>{});
+        let value = mapper.evaluateNumber(currentHp.innerText);
+        if (isNaN(value)) {
+            currentHp.innerText = lastHp;
+            return;
         }
+        lastHp = value;
+        currentHp.innerText = value;
+        hpBar.value = value;
+        invoke("update_hp", {id: monster.id, value: value}).then(() =>{});
     }
 
     let maxHp = monster.getElementsByClassName("editable-max-hp")[0];
+    let lastMaxHp = combatant.max_hp ?? 0;
     maxHp.onblur = () => {
-        let value = parseInt(eval(maxHp.innerText.replace(/[^0-9\+\-]/g, "")));
-        maxHp.innerText = value;
-        if (value !== NaN) {
-            hpBar.max = value;
-            invoke("update_max_hp", {id: monster.id, value: value}).then(() =>{});
+        let value = mapper.evaluateNumber(maxHp.innerText);
+        if (isNaN(value)) {
+            maxHp.innerText = lastMaxHp;
+            return;
         }
+        lastMaxHp = value;
+        maxHp.innerText = value;
+        hpBar.max = value;
+        invoke("update_max_hp", {id: monster.id, value: value}).then(() =>{});
     }
 
     let name = monster.getElementsByClassName("editable-name")[0];
@@ -342,16 +369,17 @@ function createTrackerParticipant(combatant, item) {
     }
 
     monster.querySelectorAll(".editable-stat").forEach(statField => {
-        let lastValue = parseInt(statField.innerText) || 0;
+        // Edit the base value, not the one with condition penalties applied
+        statField.onfocus = () => {
+            statField.innerText = stats[statField.dataset.stat];
+        };
         statField.onblur = () => {
             let value = parseInt(statField.innerText.replace(/[^0-9\+\-]/g, ""));
-            if (isNaN(value)) {
-                statField.innerText = lastValue;
-                return;
+            if (!isNaN(value)) {
+                stats[statField.dataset.stat] = value;
+                invoke("update_stat", {id: monster.id, stat: statField.dataset.stat, value: value}).then(() => {});
             }
-            lastValue = value;
-            statField.innerText = value;
-            invoke("update_stat", {id: monster.id, stat: statField.dataset.stat, value: value}).then(() => {});
+            refreshStats();
         };
     });
 
@@ -359,26 +387,36 @@ function createTrackerParticipant(combatant, item) {
     initiative.onblur = () => {
         console.log("Blurred!")
         let value = parseInt(initiative.innerText.replace(/[^0-9\+\-]/g, ""));
-        initiative.innerText = value;
-        if (value !== NaN) {
-            invoke("update_initiative", {id: monster.id, value: value}).then(() =>{});
-            document.getElementById("encounter-tracker").innerHTML = "";
-            loadCurrentCombat();
+        if (isNaN(value)) {
+            initiative.innerText = combatant.initiative || "??";
+            return;
         }
+        initiative.innerText = value;
+        invoke("update_initiative", {id: monster.id, value: value}).then(() =>{});
+        document.getElementById("encounter-tracker").innerHTML = "";
+        loadCurrentCombat();
     }
 
     let conditionBox = monster.getElementsByClassName("participant-conditions")[0];
-    combatant.conditions.forEach(existingCondition => {
-        conditionBox.appendChild(mapper.createCondition(monster.id, existingCondition.variant, existingCondition.value));
-    });
-    
+    const onConditionsChanged = updated => {
+        conditions = updated;
+        renderConditions();
+        refreshStats();
+    };
+    const renderConditions = () => {
+        conditionBox.innerHTML = "";
+        conditions.forEach(existingCondition => {
+            conditionBox.appendChild(mapper.createCondition(monster.id, existingCondition.variant, existingCondition.value, onConditionsChanged));
+        });
+    };
+    renderConditions();
+
     let conditionDropdown = monster.getElementsByClassName("dropdown-content")[0];
     mapper.conditions.forEach(condition => {
         const conditionChoice = document.createElement("a");
         conditionChoice.innerText = condition;
         conditionChoice.onclick = () => {
-            conditionBox.appendChild(mapper.createCondition(monster.id, condition));
-            invoke("add_condition", {id: monster.id, name: condition}).then(() => {});
+            invoke("add_condition", {id: monster.id, name: condition}).then(onConditionsChanged);
         };
 
         conditionDropdown.appendChild(conditionChoice);
@@ -517,11 +555,13 @@ $("#campaign-level").on("keydown", function (e) {
 
 
 $("#campaign-level").on("blur", function () {
-    let value = parseInt(eval(this.innerText.replace(/[^0-9\+\-]/g, "")));
-    this.innerText = value;
-    if (value !== NaN) {
-        invoke("update_campaign_level", {value: value}).then(() => {
-            showCampaigns();
-        });
+    let value = mapper.evaluateNumber(this.innerText);
+    if (isNaN(value)) {
+        showCampaigns();
+        return;
     }
+    this.innerText = value;
+    invoke("update_campaign_level", {value: value}).then(() => {
+        showCampaigns();
+    });
 });

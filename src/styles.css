@@ -190,6 +190,10 @@
     color:#df5b43;
 }
 
+.stat-penalized {
+    color: #ff3030;
+}
+
 h1 {
     text-align: center;
 }

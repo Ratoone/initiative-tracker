@@ -149,7 +149,7 @@ pub fn add_condition(
     state: tauri::State<'_, Mutex<AppState>>,
     id: &str,
     name: &str,
-) {
+) -> Vec<Condition> {
     let mut app_state = state.lock().unwrap();
     let participant = app_state.get_current_encounter().find_by_id(id);
     if let Some(target) = participant {
@@ -171,7 +171,7 @@ pub fn add_condition(
                     });
                 } else {
                     println!("Error, no valid condition");
-                    return;
+                    return target.conditions.clone();
                 }
             }
             Some(condition) => {
@@ -180,8 +180,11 @@ pub fn add_condition(
                 }
             }
         };
+        let conditions = target.conditions.clone();
         update_tracker(&app, &app_state.tracker_data);
+        return conditions;
     }
+    vec![]
 }
 
 #[tauri::command]
@@ -190,7 +193,7 @@ pub fn remove_condition(
     state: tauri::State<'_, Mutex<AppState>>,
     id: &str,
     name: &str,
-) {
+) -> Vec<Condition> {
     let mut app_state = state.lock().unwrap();
     let participant = app_state.get_current_encounter().find_by_id(id);
     if let Some(target) = participant {
@@ -203,8 +206,9 @@ pub fn remove_condition(
                 if let Some(value) = &mut condition.value {
                     *value -= 1;
                     if *value > 0 {
+                        let conditions = target.conditions.clone();
                         update_tracker(&app, &app_state.tracker_data);
-                        return;
+                        return conditions;
                     }
                 }
                 let index = target
@@ -216,12 +220,15 @@ pub fn remove_condition(
             }
             None => {
                 println!("Error, no valid condition");
-                return;
+                return target.conditions.clone();
             }
         }
 
+        let conditions = target.conditions.clone();
         update_tracker(&app, &app_state.tracker_data);
+        return conditions;
     }
+    vec![]
 }
 
 #[tauri::command]
